@@ -62,6 +62,7 @@ import com.android.launcher3.util.CursorIconInfo;
 import com.android.launcher3.util.LongArrayMap;
 import com.android.launcher3.util.ManagedProfileHeuristic;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.LogUtils;
 
 import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;
@@ -85,8 +86,8 @@ import java.util.Set;
  */
 public class LauncherModel extends BroadcastReceiver
         implements LauncherAppsCompat.OnAppsChangedCallbackCompat {
-    static final boolean DEBUG_LOADERS = false;
-    private static final boolean DEBUG_RECEIVER = false;
+    static final boolean DEBUG_LOADERS = LogUtils.DEBUG_LOADER;
+    private static final boolean DEBUG_RECEIVER = LogUtils.DEBUG_RECEIVER;
     private static final boolean REMOVE_UNRESTORED_ICONS = true;
 
     static final String TAG = "Launcher.Model";

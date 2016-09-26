@@ -29,10 +29,12 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src) \
     $(call all-java-files-under, WallpaperPicker/src) \
+    $(call all-java-files-under, ext/src) \
     $(call all-proto-files-under, protos)
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/WallpaperPicker/res \
     $(LOCAL_PATH)/res \
+    $(LOCAL_PATH)/ext/res \
     $(LOCAL_PATH)/../../../prebuilts/sdk/current/support/v7/recyclerview/res
 
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags

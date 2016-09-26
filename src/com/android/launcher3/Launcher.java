@@ -110,6 +110,7 @@ import com.android.launcher3.util.Thunk;
 import com.android.launcher3.widget.PendingAddWidgetInfo;
 import com.android.launcher3.widget.WidgetHostViewLoader;
 import com.android.launcher3.widget.WidgetsContainerView;
+import com.sprd.launcher3.ext.LogUtils;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -132,13 +133,13 @@ public class Launcher extends Activity
         implements View.OnClickListener, OnLongClickListener, LauncherModel.Callbacks,
                    View.OnTouchListener, PageSwitchListener, LauncherProviderChangeListener {
     static final String TAG = "Launcher";
-    static final boolean LOGD = false;
+    static final boolean LOGD = LogUtils.DEBUG;
 
     static final boolean PROFILE_STARTUP = false;
-    static final boolean DEBUG_WIDGETS = true;
+    static final boolean DEBUG_WIDGETS = LogUtils.DEBUG_WIDGET;
     static final boolean DEBUG_STRICT_MODE = false;
-    static final boolean DEBUG_RESUME_TIME = false;
-    static final boolean DEBUG_DUMP_LOG = false;
+    static final boolean DEBUG_RESUME_TIME = LogUtils.DEBUG_RESUME_TIME;
+    static final boolean DEBUG_DUMP_LOG = LogUtils.DEBUG_DUMP_LOG;
 
     static final boolean ENABLE_DEBUG_INTENTS = false; // allow DebugIntents to run
 

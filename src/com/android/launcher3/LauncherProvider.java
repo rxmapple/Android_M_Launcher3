@@ -56,6 +56,7 @@ import com.android.launcher3.compat.UserManagerCompat;
 import com.android.launcher3.config.ProviderConfig;
 import com.android.launcher3.util.ManagedProfileHeuristic;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.LogUtils;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -66,7 +67,7 @@ import java.util.List;
 
 public class LauncherProvider extends ContentProvider {
     private static final String TAG = "LauncherProvider";
-    private static final boolean LOGD = false;
+    private static final boolean LOGD = LogUtils.DEBUG;
 
     private static final int DATABASE_VERSION = 26;
 

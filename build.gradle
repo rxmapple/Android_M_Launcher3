@@ -29,12 +29,35 @@ android {
     }
     sourceSets {
         main {
-            res.srcDirs = ['res', 'WallpaperPicker/res']
-            main.java.srcDirs = ['src', 'WallpaperPicker/src']
+            res.srcDirs = ['res', 'WallpaperPicker/res', 'ext/res']
+            main.java.srcDirs = ['src', 'WallpaperPicker/src', 'ext/src']
             manifest.srcFile 'AndroidManifest.xml'
             proto.srcDirs 'protos/'
         }
     }
+}
+
+dependencies {
+    provided files(getLayoutLibPath())
+}
+
+/** get layoutlib.jar path. android.os.SystemProperties need it. */
+// must called after "android" definition
+def getLayoutLibPath() {
+    def rootDir = project.rootDir
+    def localProperties = new File(rootDir, "local.properties")
+    if (localProperties.exists()) {
+        Properties properties = new Properties()
+        localProperties.withInputStream {
+            instr -> properties.load(instr)
+        }
+        def sdkDir = properties.getProperty('sdk.dir')
+        def compileSdkVersion = android.compileSdkVersion
+        Console.println("app compileSdkVersion : " + compileSdkVersion)
+        def androidJarPath = sdkDir + "/platforms/" + compileSdkVersion + "/data/layoutlib.jar"
+        return androidJarPath
+    }
+    return rootDir
 }
 
 repositories {
