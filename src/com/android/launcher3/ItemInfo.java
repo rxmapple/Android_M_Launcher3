@@ -121,6 +121,9 @@ public class ItemInfo {
 
     public UserHandleCompat user;
 
+    //SPRD:Added for unread message feature
+    public int unreadNum = 0;
+
     public ItemInfo() {
         user = UserHandleCompat.myUserHandle();
     }
@@ -143,6 +146,7 @@ public class ItemInfo {
         container = info.container;
         user = info.user;
         contentDescription = info.contentDescription;
+        unreadNum = info.unreadNum;
     }
 
     public Intent getIntent() {
@@ -194,7 +198,7 @@ public class ItemInfo {
     public String toString() {
         return "Item(id=" + this.id + " type=" + this.itemType + " container=" + this.container
             + " screen=" + screenId + " cellX=" + cellX + " cellY=" + cellY + " spanX=" + spanX
-            + " spanY=" + spanY + " dropPos=" + Arrays.toString(dropPos)
+            + " spanY=" + spanY + " dropPos=" + Arrays.toString(dropPos) + " unreadNum=" + unreadNum
             + " user=" + user + ")";
     }
 }

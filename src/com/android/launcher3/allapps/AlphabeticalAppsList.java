@@ -25,6 +25,9 @@ import com.android.launcher3.compat.AlphabeticIndexCompat;
 import com.android.launcher3.compat.UserHandleCompat;
 import com.android.launcher3.model.AppNameComparator;
 import com.android.launcher3.util.ComponentKey;
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.LogUtils;
+import com.sprd.launcher3.ext.UnreadLoaderUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -315,6 +318,13 @@ public class AlphabeticalAppsList {
      */
     public void updateApps(List<AppInfo> apps) {
         for (AppInfo app : apps) {
+            if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
+                app.unreadNum = UnreadLoaderUtils.getUnreadNumberOfComponent(app.componentName);
+                if (LogUtils.DEBUG_UNREAD) {
+                    LogUtils.d(TAG, "updateApps: app.componentName = " + app.componentName
+                            + ",app.unreadNum = " + app.unreadNum);
+                }
+            }
             mComponentToAppMap.put(app.toComponentKey(), app);
         }
         onAppsUpdated();

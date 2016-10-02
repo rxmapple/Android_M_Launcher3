@@ -26,6 +26,7 @@ import com.android.launcher3.compat.LauncherActivityInfoCompat;
 import com.android.launcher3.compat.UserHandleCompat;
 import com.android.launcher3.compat.UserManagerCompat;
 import com.android.launcher3.util.ComponentKey;
+import com.sprd.launcher3.ext.UnreadLoaderUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,6 +84,8 @@ public class AppInfo extends ItemInfo {
         this.componentName = info.getComponentName();
         this.container = ItemInfo.NO_ID;
 
+        this.unreadNum = UnreadLoaderUtils.getUnreadNumberOfComponent( this.componentName );
+
         flags = initFlags(info);
         firstInstallTime = info.getFirstInstallTime();
         iconCache.getTitleAndIcon(this, info, true /* useLowResIcon */);
@@ -106,6 +109,7 @@ public class AppInfo extends ItemInfo {
     public AppInfo(AppInfo info) {
         super(info);
         componentName = info.componentName;
+        unreadNum = UnreadLoaderUtils.getUnreadNumberOfComponent( componentName );
         title = Utilities.trim(info.title);
         intent = new Intent(info.intent);
         flags = info.flags;

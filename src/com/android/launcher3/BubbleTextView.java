@@ -43,6 +43,8 @@ import android.widget.TextView;
 
 import com.android.launcher3.IconCache.IconLoadRequest;
 import com.android.launcher3.model.PackageItemInfo;
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.UnreadLoaderUtils;
 
 /**
  * TextView that draws a bubble behind the text. We cannot use a LineBackgroundSpan
@@ -51,6 +53,7 @@ import com.android.launcher3.model.PackageItemInfo;
  */
 public class BubbleTextView extends TextView
         implements BaseRecyclerViewFastScrollBar.FastScrollFocusableView {
+    private static final String TAG = "BubbleTextView";
 
     private static SparseArray<Theme> sPreloaderThemes = new SparseArray<Theme>(2);
 
@@ -373,6 +376,7 @@ public class BubbleTextView extends TextView
             }
 
             super.draw(canvas);
+            drawUnreadEvent(canvas);
 
             return;
         }
@@ -400,6 +404,7 @@ public class BubbleTextView extends TextView
         if (getCurrentTextColor() == getResources().getColor(android.R.color.transparent)) {
             getPaint().clearShadowLayer();
             super.draw(canvas);
+            drawUnreadEvent(canvas);
             return;
         }
 
@@ -413,6 +418,7 @@ public class BubbleTextView extends TextView
         getPaint().setShadowLayer(SHADOW_SMALL_RADIUS, 0.0f, 0.0f, SHADOW_SMALL_COLOUR);
         super.draw(canvas);
         canvas.restore();
+        drawUnreadEvent(canvas);
     }
 
     @Override
@@ -633,5 +639,15 @@ public class BubbleTextView extends TextView
      */
     public static interface BubbleTextShadowHandler {
         void setPressedIcon(BubbleTextView icon, Bitmap background);
+    }
+
+    private void drawUnreadEvent(Canvas canvas) {
+        if (!FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
+            return;
+        }
+       /* if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "drawUnreadEvent() this = " + this);
+        }*/
+        UnreadLoaderUtils.drawUnreadEventIfNeed(canvas, this);
     }
 }

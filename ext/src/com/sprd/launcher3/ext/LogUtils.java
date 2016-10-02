@@ -19,6 +19,8 @@ public final class LogUtils {
     public static boolean DEBUG_RECEIVER = false;
     public static boolean DEBUG_RESUME_TIME = false;
     public static boolean DEBUG_DUMP_LOG = false;
+    public static boolean DEBUG_UNREAD = false;
+    public static boolean DEBUG_PERFORMANCE = false;
 
     /** use android properties to control debug on/off. */
     // define system properties
@@ -29,6 +31,8 @@ public final class LogUtils {
     private static final String PROP_DEBUG_RECEIVER = "launcher.debug.receiver";
     private static final String PROP_DEBUG_RESUME_TIME = "launcher.debug.resumetime";
     private static final String PROP_DEBUG_DUMP_LOG = "launcher.debug.dumplog";
+    private static final String PROP_DEBUG_UNREAD = "launcher.debug.unread";
+    private static final String PROP_DEBUG_PERFORMANCE = "launcher.debug.performance";
     /** end */
 
     static {
@@ -39,6 +43,8 @@ public final class LogUtils {
             DEBUG_RECEIVER = true;
             DEBUG_RESUME_TIME = true;
             DEBUG_DUMP_LOG = true;
+            DEBUG_UNREAD = true;
+            DEBUG_PERFORMANCE = true;
         } else {
             DEBUG = SystemProperties.getBoolean(PROP_DEBUG, !Build.TYPE.equals("user"));
             DEBUG_LOADER = SystemProperties.getBoolean(PROP_DEBUG_LOADER, false);
@@ -46,6 +52,8 @@ public final class LogUtils {
             DEBUG_WIDGET = SystemProperties.getBoolean(PROP_DEBUG_RECEIVER, false);
             DEBUG_RESUME_TIME = SystemProperties.getBoolean(PROP_DEBUG_RESUME_TIME, false);
             DEBUG_DUMP_LOG = SystemProperties.getBoolean(PROP_DEBUG_DUMP_LOG, false);
+            DEBUG_UNREAD = SystemProperties.getBoolean(PROP_DEBUG_UNREAD, false);
+            DEBUG_PERFORMANCE = SystemProperties.getBoolean(PROP_DEBUG_PERFORMANCE, false);
         }
     }
     /**

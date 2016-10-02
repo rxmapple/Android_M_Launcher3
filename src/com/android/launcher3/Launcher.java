@@ -110,7 +110,9 @@ import com.android.launcher3.util.Thunk;
 import com.android.launcher3.widget.PendingAddWidgetInfo;
 import com.android.launcher3.widget.WidgetHostViewLoader;
 import com.android.launcher3.widget.WidgetsContainerView;
+import com.sprd.launcher3.ext.FeatureOption;
 import com.sprd.launcher3.ext.LogUtils;
+import com.sprd.launcher3.ext.UnreadLoaderUtils;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -131,7 +133,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Launcher extends Activity
         implements View.OnClickListener, OnLongClickListener, LauncherModel.Callbacks,
-                   View.OnTouchListener, PageSwitchListener, LauncherProviderChangeListener {
+                   View.OnTouchListener, PageSwitchListener, LauncherProviderChangeListener,
+        UnreadLoaderUtils.UnreadCallbacks {
     static final String TAG = "Launcher";
     static final boolean LOGD = LogUtils.DEBUG;
 
@@ -400,6 +403,11 @@ public class Launcher extends Activity
         }
     };
 
+    private UnreadLoaderUtils mUnreadLoaderUtils = null;
+    public boolean mUnreadLoadCompleted = false;
+    private boolean mBindingWorkspaceFinished = false;
+    public boolean mBindingAppsFinished = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (DEBUG_STRICT_MODE) {
@@ -425,6 +433,23 @@ public class Launcher extends Activity
 
         LauncherAppState.setApplicationContext(getApplicationContext());
         LauncherAppState app = LauncherAppState.getInstance();
+
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "launcher unread support:" + FeatureOption.SPRD_UNREAD_INFO_SUPPORT);
+        }
+
+        if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
+            mUnreadLoaderUtils = UnreadLoaderUtils.getInstance(getApplicationContext());
+
+            // Register unread change broadcast.
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(UnreadLoaderUtils.ACTION_UNREAD_CHANGED);
+            registerReceiver(mUnreadLoaderUtils, filter);
+
+            // initialize unread loader
+            mUnreadLoaderUtils.initialize(this);
+            mUnreadLoaderUtils.loadAndInitUnreadShortcuts();
+        }
 
         // Load configuration-specific DeviceProfile
         mDeviceProfile = getResources().getConfiguration().orientation
@@ -2010,6 +2035,10 @@ public class Launcher extends Activity
         TextKeyListener.getInstance().release();
 
         unregisterReceiver(mCloseSystemDialogsReceiver);
+
+        if (mUnreadLoaderUtils != null) {
+            unregisterReceiver( mUnreadLoaderUtils );
+        }
 
         mDragLayer.clearAllResizeFrames();
         ((ViewGroup) mWorkspace.getParent()).removeAllViews();
@@ -4045,6 +4074,13 @@ public class Launcher extends Activity
             sPendingAddItem = null;
         }
 
+        if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
+            if (mUnreadLoadCompleted) {
+                bindWorkspaceUnreadInfo();
+            }
+            mBindingWorkspaceFinished = true;
+        }
+
         InstallShortcutReceiver.disableAndFlushInstallQueue(this);
 
         if (mLauncherCallbacks != null) {
@@ -4720,6 +4756,107 @@ public class Launcher extends Activity
             }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void) null);
         }
     }
+
+    /**SPRD: Added for unread message feature.@{**/
+
+    /**
+     * SPRD: Bind component unread information in workspace and all apps list.
+     *
+     * @param component the component name of the app.
+     * @param unreadNum the number of the unread message.
+     */
+    public void bindComponentUnreadChanged(final ComponentName component, final int unreadNum) {
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "bindComponentUnreadChanged: component = " + component
+                    + ", unreadNum = " + unreadNum + ", this = " + this);
+        }
+        // Post to message queue to avoid possible ANR.
+        mHandler.post(new Runnable() {
+            public void run() {
+                final long start = System.currentTimeMillis();
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindComponentUnreadChanged begin: component = " + component
+                            + ", unreadNum = " + unreadNum + ", start = " + start);
+                }
+                if (mWorkspace != null) {
+                    mWorkspace.updateComponentUnreadChanged(component, unreadNum);
+                }
+
+                if (mAppsView != null) {
+                    mAppsView.updateAppsUnreadChanged(component, unreadNum);
+                }
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindComponentUnreadChanged end: current time = "
+                            + System.currentTimeMillis() + ", time used = "
+                            + (System.currentTimeMillis() - start));
+                }
+            }
+        });
+    }
+
+    /**
+     * SPRD: Bind shortcuts unread number if binding process has finished.
+     */
+    public void bindUnreadInfoIfNeeded() {
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "bindUnreadInfoIfNeeded: mBindingWorkspaceFinished = "
+                    + mBindingWorkspaceFinished + ", thread = " + Thread.currentThread());
+        }
+        if (mBindingWorkspaceFinished) {
+            bindWorkspaceUnreadInfo();
+        }
+
+        if (mBindingAppsFinished) {
+            bindAppsUnreadInfo();
+        }
+        mUnreadLoadCompleted = true;
+    }
+
+    /**
+     * SPRD: Bind unread number to shortcuts with data in UnreadLoaderUtils.
+     */
+    private void bindWorkspaceUnreadInfo() {
+        mHandler.post(new Runnable() {
+            public void run() {
+                final long start = System.currentTimeMillis();
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindWorkspaceUnreadInfo begin: start = " + start);
+                }
+                if (mWorkspace != null) {
+                    mWorkspace.updateShortcutsAndFoldersUnread();
+                }
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindWorkspaceUnreadInfo end: current time = "
+                            + System.currentTimeMillis() + ",time used = "
+                            + (System.currentTimeMillis() - start));
+                }
+            }
+        });
+    }
+
+    /**
+     * SPRD: Bind unread number to shortcuts with data in UnreadLoaderUtils.
+     */
+    private void bindAppsUnreadInfo() {
+        mHandler.post(new Runnable() {
+            public void run() {
+                final long start = System.currentTimeMillis();
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindAppsUnreadInfo begin: start = " + start);
+                }
+                /*unread if (mAppsCustomizeContent != null) {
+                    mAppsCustomizeContent.updateAppsUnread();
+                }*/
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindAppsUnreadInfo end: current time = "
+                            + System.currentTimeMillis() + ",time used = "
+                            + (System.currentTimeMillis() - start));
+                }
+            }
+        });
+    }
+
+/**@}**/
 }
 
 interface DebugIntents {

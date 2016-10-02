@@ -59,6 +59,7 @@ import com.android.launcher3.Workspace.ItemOperator;
 import com.android.launcher3.accessibility.LauncherAccessibilityDelegate.AccessibilityDragSource;
 import com.android.launcher3.util.Thunk;
 import com.android.launcher3.util.UiThreadCircularReveal;
+import com.sprd.launcher3.ext.LogUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1409,4 +1410,53 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
             }
         }
     };
+
+    /**
+     * SPRD: Update unread number of the content shortcut.
+     */
+    public void updateContentUnreadNum() {
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "Folder updateContentUnreadNum: mInfo = " + mInfo);
+        }
+        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                getAllShortcutContainersInFolder();
+        int childCount = 0;
+        View view = null;
+        Object tag = null;
+
+        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
+            childCount = layout.getChildCount();
+            for (int j = 0; j < childCount; j++) {
+                view = layout.getChildAt(j);
+                tag = view.getTag();
+                if (LogUtils.DEBUG_UNREAD) {
+                    LogUtils.d(TAG, "updateShortcutsAndFoldersUnread: tag = " + tag + ", j = "
+                            + j + ", view = " + view);
+                }
+                if (tag instanceof ShortcutInfo) {
+                    final ShortcutInfo info = (ShortcutInfo) tag;
+                    if (LogUtils.DEBUG_UNREAD) {
+                        LogUtils.d(TAG, "updateShortcutsAndFoldersUnread:info =" + info.toString());
+                    }
+                    ((BubbleTextView) view).invalidate();
+                }
+            }
+        }
+    }
+
+    /**
+     * We should only use this to search for specific children.  Do not use this method to modify
+     * ShortcutsAndWidgetsContainer directly. Includes ShortcutAndWidgetContainers from
+     * the hotseat and workspace pages
+     */
+    private ArrayList<ShortcutAndWidgetContainer> getAllShortcutContainersInFolder() {
+        ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                new ArrayList<ShortcutAndWidgetContainer>();
+        int screenCount = mContent.getChildCount();
+        for (int screen = 0; screen < screenCount; screen++) {
+            childrenLayouts.add(
+                    ((CellLayout) (mContent.getChildAt(screen))).getShortcutsAndWidgets());
+        }
+        return childrenLayouts;
+    }
 }
