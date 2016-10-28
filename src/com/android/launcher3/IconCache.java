@@ -48,6 +48,8 @@ import com.android.launcher3.compat.UserManagerCompat;
 import com.android.launcher3.model.PackageItemInfo;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.DynamicIconUtils;
+import com.sprd.launcher3.ext.FeatureOption;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -381,6 +383,17 @@ public class IconCache {
         if (entry == null) {
             entry = new CacheEntry();
             entry.icon = Utilities.createIconBitmap(app.getBadgedIcon(mIconDpi), mContext);
+
+            //SPRD: Add for change the stable background of dynamic icon.
+            /* if only add in the cacheLocked(...) function, when the local language changed, the dynamic
+            * icon background will become the original icon.
+            */
+            if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+                Drawable background = DynamicIconUtils.getStableBGForComponent(app.getComponentName());
+                if (background != null) {
+                    entry.icon = Utilities.createIconBitmap(background, mContext);
+                }
+            }
         }
         entry.title = app.getLabel();
         entry.contentDescription = mUserManager.getBadgedLabelForUser(entry.title, app.getUser());
@@ -559,6 +572,14 @@ public class IconCache {
                         if (DEBUG) Log.d(TAG, "using default icon for " +
                                 componentName.toShortString());
                         entry.icon = getDefaultIcon(user);
+                    }
+                }
+
+                //SPRD: Add for change the stable background of dynamic icon.
+                if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+                    Drawable background = DynamicIconUtils.getStableBGForComponent(componentName);
+                    if (background != null) {
+                        entry.icon = Utilities.createIconBitmap(background, mContext);
                     }
                 }
             }

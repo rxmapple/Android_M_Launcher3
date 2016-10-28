@@ -51,6 +51,7 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.LogUtils;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
@@ -131,6 +132,8 @@ final class SimpleSectionMergeAlgorithm implements AlphabeticalAppsList.MergeAlg
 public class AllAppsContainerView extends BaseContainerView implements DragSource,
         LauncherTransitionable, View.OnTouchListener, View.OnLongClickListener,
         AllAppsSearchBarController.Callbacks {
+
+    private static final String TAG = "AllAppsContainerView";
 
     private static final int MIN_ROWS_IN_MERGED_SECTION_PHONE = 3;
     private static final int MAX_NUM_MERGES_PHONE = 2;
@@ -646,6 +649,26 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
         // Refresh the recycler view
         if (mAdapter != null) {
             mAdapter.notifyDataSetChanged();
+        }
+    }
+
+    public void updateAppsDynamicIconChanged(ComponentName componentName) {
+        List<AlphabeticalAppsList.AdapterItem> mAdapterItems = mApps.getAdapterItems();
+        final int size = mAdapterItems.size();
+        AlphabeticalAppsList.AdapterItem adapterItem = null;
+        for (int i = 0; i < size; i++) {
+            adapterItem = mAdapterItems.get(i);
+            if (adapterItem.appInfo != null && adapterItem.appInfo.intent != null
+                    && adapterItem.appInfo.intent.getComponent().equals(componentName)) {
+                if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                    LogUtils.d(TAG, "updateAppsDynamicIconChanged: componentName = " + componentName +
+                            ", mAppsRecyclerView.getVisibility() = " + mAppsRecyclerView.getVisibility());
+                }
+                // Refresh the recycler view
+                if (mAdapter != null) {
+                    mAdapter.notifyItemChanged(i);
+                }
+            }
         }
     }
 }

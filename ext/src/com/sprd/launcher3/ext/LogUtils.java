@@ -20,6 +20,7 @@ public final class LogUtils {
     public static boolean DEBUG_RESUME_TIME = false;
     public static boolean DEBUG_DUMP_LOG = false;
     public static boolean DEBUG_UNREAD = false;
+    public static boolean DEBUG_DYNAMIC_ICON = false;
     public static boolean DEBUG_PERFORMANCE = false;
 
     /** use android properties to control debug on/off. */

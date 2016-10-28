@@ -40,6 +40,7 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.Region.Op;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -74,6 +75,8 @@ import com.android.launcher3.util.Thunk;
 import com.android.launcher3.util.WallpaperUtils;
 import com.android.launcher3.widget.PendingAddShortcutInfo;
 import com.android.launcher3.widget.PendingAddWidgetInfo;
+import com.sprd.launcher3.ext.DynamicIconUtils;
+import com.sprd.launcher3.ext.FeatureOption;
 import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
 
@@ -2137,6 +2140,11 @@ public class Workspace extends PagedView
             clipRect.set(0, 0, bounds.width() + padding, bounds.height() + padding);
             destCanvas.translate(padding / 2 - bounds.left, padding / 2 - bounds.top);
             d.draw(destCanvas);
+
+            //SPRD: Add for dynamic icon feature
+            if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+                DynamicIconUtils.drawDynamicIconIfNeed(destCanvas, v, 1.0f, true);
+            }
         } else {
             if (v instanceof FolderIcon) {
                 // For FolderIcons the text can bleed into the icon area, and so we need to
@@ -4633,6 +4641,101 @@ public class Workspace extends PagedView
         Folder openFolder = getOpenFolder();
         if (openFolder != null) {
             openFolder.updateContentUnreadNum();
+        }
+    }
+    /**@}**/
+
+    /**SPRD: Added for dynamic icon feature.@{**/
+    /**
+     * SPRD: Update dynamic icon  of shortcuts in workspace and hotseat.
+     */
+    public void updateShortcutsAndFoldersDynamicIcon() {
+        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+            LogUtils.d(TAG, "updateShortcutsAndFoldersDynamicIcon: this = " + this);
+        }
+        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                getAllShortcutAndWidgetContainers();
+        int childCount = 0;
+        View view = null;
+        Object tag = null;
+        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
+            childCount = layout.getChildCount();
+            for (int j = 0; j < childCount; j++) {
+                view = layout.getChildAt(j);
+                tag = view.getTag();
+                if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                    LogUtils.d(TAG, "updateShortcutsAndFoldersDynamicIcon: tag = " + tag + ", j = "
+                            + j + ", view = " + view);
+                }
+                if (tag instanceof ShortcutInfo) {
+                    final ShortcutInfo info = (ShortcutInfo) tag;
+                    final Intent intent = info.intent;
+                    final ComponentName componentName = intent.getComponent();
+                    info.dynamicIconDrawCallback = DynamicIconUtils.getDICForComponent(componentName);
+                    ((BubbleTextView) view).invalidate();
+                } else if (tag instanceof FolderInfo) {
+                    ((FolderIcon) view).updateFolderDynamicIcon();
+                    ((FolderIcon) view).invalidate();
+                }
+            }
+        }
+    }
+
+    /**
+     * SPRD: Update dynamic icon of shortcuts and folders in workspace and hotseat
+     * with the given component.
+     * @param component the component name of the app.
+     */
+    public void updateComponentDynamicIconChanged(ComponentName component) {
+        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+            LogUtils.d(TAG, "updateComponentDynamicIconChanged: component = " + component);
+        }
+        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                getAllShortcutAndWidgetContainers();
+        int childCount = 0;
+        View view = null;
+        Object tag = null;
+        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
+            childCount = layout.getChildCount();
+            for (int j = 0; j < childCount; j++) {
+                view = layout.getChildAt(j);
+
+                if (view != null) {
+                    tag = view.getTag();
+                } else {
+                    if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                        LogUtils.d(TAG, "updateComponentDynamicIconChanged: view is null pointer");
+                    }
+                    continue;
+                }
+                /// SPRD.
+                if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                    LogUtils.d(TAG, "updateComponentDynamicIconChanged: component = " + component
+                            + ",tag = " + tag + ",j = " + j + ",view = " + view);
+                }
+                if (tag instanceof ShortcutInfo) {
+                    final ShortcutInfo info = (ShortcutInfo) tag;
+                    final Intent intent = info.intent;
+                    final ComponentName componentName = intent.getComponent();
+                    if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                        LogUtils.d(TAG, "updateComponentDynamicIconChanged 1: find component = "
+                                + component + ",intent = " + intent + ",componentName = "
+                                + componentName);
+                    }
+                    if (componentName != null && componentName.equals(component)) {
+                        LogUtils.d(TAG, "updateComponentDynamicIconChanged 2: find component = "
+                                + component + ",tag = " + tag + ",j = " + j + ",cellX = "
+                                + info.cellX + ",cellY = " + info.cellY);
+                        ((BubbleTextView) view).invalidate();
+                    }
+                }
+            }
+        }
+
+        /// SPRD: Update shortcut within folder if open folder exists.
+        Folder openFolder = getOpenFolder();
+        if (openFolder != null) {
+            openFolder.updateContentDynamicIcon(component);
         }
     }
     /**@}**/

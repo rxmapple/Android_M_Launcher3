@@ -43,6 +43,7 @@ import android.widget.TextView;
 
 import com.android.launcher3.IconCache.IconLoadRequest;
 import com.android.launcher3.model.PackageItemInfo;
+import com.sprd.launcher3.ext.DynamicIconUtils;
 import com.sprd.launcher3.ext.FeatureOption;
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
 
@@ -213,6 +214,13 @@ public class BubbleTextView extends TextView
         verifyHighRes();
     }
 
+    public DeviceProfile getDeviceProfile() {
+        if (mLauncher != null) {
+            return mLauncher.getDeviceProfile();
+        }
+        return null;
+    }
+
     /**
      * Overrides the default long press timeout.
      */
@@ -376,6 +384,7 @@ public class BubbleTextView extends TextView
             }
 
             super.draw(canvas);
+            drawDynamicIcon(canvas);
             drawUnreadEvent(canvas);
 
             return;
@@ -404,6 +413,7 @@ public class BubbleTextView extends TextView
         if (getCurrentTextColor() == getResources().getColor(android.R.color.transparent)) {
             getPaint().clearShadowLayer();
             super.draw(canvas);
+            drawDynamicIcon(canvas);
             drawUnreadEvent(canvas);
             return;
         }
@@ -418,6 +428,7 @@ public class BubbleTextView extends TextView
         getPaint().setShadowLayer(SHADOW_SMALL_RADIUS, 0.0f, 0.0f, SHADOW_SMALL_COLOUR);
         super.draw(canvas);
         canvas.restore();
+        drawDynamicIcon(canvas);
         drawUnreadEvent(canvas);
     }
 
@@ -649,5 +660,13 @@ public class BubbleTextView extends TextView
             LogUtils.d(TAG, "drawUnreadEvent() this = " + this);
         }*/
         UnreadLoaderUtils.drawUnreadEventIfNeed(canvas, this);
+    }
+
+    private void drawDynamicIcon(Canvas canvas) {
+        if (!FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            return;
+        }
+
+        DynamicIconUtils.drawDynamicIconIfNeed(canvas, this, 1.0f, false);
     }
 }

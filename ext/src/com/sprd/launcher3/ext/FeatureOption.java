@@ -10,6 +10,9 @@ public class FeatureOption {
     public static final String TAG = "Launcher3.FeatureOption";
 
     public static final boolean SPRD_UNREAD_INFO_SUPPORT = getProp("ro.sprd_unread_info", true);
+    public static final boolean SPRD_DYNAMIC_ICON_SUPPORT = getProp("ro.sprd_dynamic_icon", true);
+    public static final boolean SPRD_DYNAMIC_CLOCK_SUPPORT = getProp("ro.sprd_dynamic_clock", true);
+    public static final boolean SPRD_DYNAMIC_CALENDAR_SUPPORT = getProp("ro.sprd_dynamic_calendar", true);
 
     private static boolean getProp(String prop, boolean devalues) {
         boolean ret = false;

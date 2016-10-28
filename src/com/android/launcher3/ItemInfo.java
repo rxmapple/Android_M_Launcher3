@@ -23,6 +23,7 @@ import android.graphics.Bitmap;
 
 import com.android.launcher3.compat.UserHandleCompat;
 import com.android.launcher3.compat.UserManagerCompat;
+import com.sprd.launcher3.dynamicIcon.DynamicIcon.DynamicIconDrawCallback;
 
 import java.util.Arrays;
 
@@ -124,6 +125,9 @@ public class ItemInfo {
     //SPRD:Added for unread message feature
     public int unreadNum = 0;
 
+    //SPRD: Add for dynamic icon feature
+    public DynamicIconDrawCallback dynamicIconDrawCallback;
+
     public ItemInfo() {
         user = UserHandleCompat.myUserHandle();
     }
@@ -147,6 +151,7 @@ public class ItemInfo {
         user = info.user;
         contentDescription = info.contentDescription;
         unreadNum = info.unreadNum;
+        dynamicIconDrawCallback = info.dynamicIconDrawCallback;
     }
 
     public Intent getIntent() {
@@ -199,6 +204,6 @@ public class ItemInfo {
         return "Item(id=" + this.id + " type=" + this.itemType + " container=" + this.container
             + " screen=" + screenId + " cellX=" + cellX + " cellY=" + cellY + " spanX=" + spanX
             + " spanY=" + spanY + " dropPos=" + Arrays.toString(dropPos) + " unreadNum=" + unreadNum
-            + " user=" + user + ")";
+            + " dynamicIconDrawCallback=" + dynamicIconDrawCallback + " user=" + user + ")";
     }
 }

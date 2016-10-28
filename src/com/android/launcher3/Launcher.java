@@ -110,6 +110,7 @@ import com.android.launcher3.util.Thunk;
 import com.android.launcher3.widget.PendingAddWidgetInfo;
 import com.android.launcher3.widget.WidgetHostViewLoader;
 import com.android.launcher3.widget.WidgetsContainerView;
+import com.sprd.launcher3.ext.DynamicIconUtils;
 import com.sprd.launcher3.ext.FeatureOption;
 import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
@@ -134,7 +135,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Launcher extends Activity
         implements View.OnClickListener, OnLongClickListener, LauncherModel.Callbacks,
                    View.OnTouchListener, PageSwitchListener, LauncherProviderChangeListener,
-        UnreadLoaderUtils.UnreadCallbacks {
+        UnreadLoaderUtils.UnreadCallbacks, DynamicIconUtils.DynamicAppChangedCallbacks{
     static final String TAG = "Launcher";
     static final boolean LOGD = LogUtils.DEBUG;
 
@@ -408,6 +409,11 @@ public class Launcher extends Activity
     private boolean mBindingWorkspaceFinished = false;
     public boolean mBindingAppsFinished = false;
 
+    private DynamicIconUtils mDynamicIconUtils = null;
+    private boolean mDynamicIconLoadCompleted = false;
+    private boolean mBindingWorkspaceCompleted = false;
+    public boolean mBindingAppsCompleted = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (DEBUG_STRICT_MODE) {
@@ -451,6 +457,14 @@ public class Launcher extends Activity
             mUnreadLoaderUtils.loadAndInitUnreadShortcuts();
         }
 
+        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            mDynamicIconUtils = DynamicIconUtils.getInstance(getApplicationContext());
+
+            // initialize dynamic icon
+            mDynamicIconUtils.initialize(this);
+            mDynamicIconUtils.loadAndInitDynamicIcon();
+
+        }
         // Load configuration-specific DeviceProfile
         mDeviceProfile = getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE ?
@@ -4081,6 +4095,13 @@ public class Launcher extends Activity
             mBindingWorkspaceFinished = true;
         }
 
+        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            if (mDynamicIconLoadCompleted) {
+                bindWorkspaceDynamicInfo();
+            }
+            mBindingWorkspaceCompleted = true;
+        }
+
         InstallShortcutReceiver.disableAndFlushInstallQueue(this);
 
         if (mLauncherCallbacks != null) {
@@ -4857,6 +4878,81 @@ public class Launcher extends Activity
     }
 
 /**@}**/
+
+    /**SPRD: Added for dynamic icon feature.@{**/
+
+    /**
+     * SPRD: Bind component dynamic icon in workspace and all apps list.
+     * @param component the component name of the app.
+     */
+    public void bindComponentDynamicIconChanged(final ComponentName component) {
+        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+            LogUtils.d(TAG, "bindComponentDynamicIconChanged: component = " + component
+                    + ", this = " + this);
+        }
+        // Post to message queue to avoid possible ANR.
+        mHandler.post(new Runnable() {
+            public void run() {
+                final long start = System.currentTimeMillis();
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindComponentDynamicIconChanged begin: component = " + component
+                            + ", start = " + start);
+                }
+                if (mWorkspace != null) {
+                    mWorkspace.updateComponentDynamicIconChanged(component);
+                }
+
+                if (mAppsView != null && isAppsViewVisible()) {
+                    mAppsView.updateAppsDynamicIconChanged(component);
+                }
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindComponentDynamicIconChanged end: current time = "
+                            + System.currentTimeMillis() + ", time used = "
+                            + (System.currentTimeMillis() - start));
+                }
+            }
+        });
+    }
+
+    @Override
+    public void bindDynamicIconIfNeeded() {
+        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+            LogUtils.d(TAG, "bindDynamicIconIfNeeded: mBindingWorkspaceCompleted = "
+                    + mBindingWorkspaceCompleted + ", thread = " + Thread.currentThread());
+        }
+        if (mBindingWorkspaceCompleted) {
+            bindWorkspaceDynamicInfo();
+        }
+
+        if (mBindingAppsCompleted) {
+            //bind Apps dynamic icon;
+        }
+
+        mDynamicIconLoadCompleted = true;
+    }
+
+    /**
+     * SPRD: Bind dynamic icon to shortcuts with data in DynamicIconUtils.
+     */
+    private void bindWorkspaceDynamicInfo() {
+        mHandler.post(new Runnable() {
+            public void run() {
+                final long start = System.currentTimeMillis();
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindWorkspaceDynamicInfo begin: start = " + start);
+                }
+                if (mWorkspace != null) {
+                    mWorkspace.updateShortcutsAndFoldersDynamicIcon();
+                }
+                if (LogUtils.DEBUG_PERFORMANCE) {
+                    LogUtils.d(TAG, "bindWorkspaceDynamicInfo end: current time = "
+                            + System.currentTimeMillis() + ",time used = "
+                            + (System.currentTimeMillis() - start));
+                }
+            }
+        });
+    }
+    /* @} */
 }
 
 interface DebugIntents {

@@ -31,6 +31,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -45,6 +46,8 @@ import android.widget.TextView;
 import com.android.launcher3.DropTarget.DragObject;
 import com.android.launcher3.FolderInfo.FolderListener;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.dynamicIcon.DynamicIcon.DynamicIconDrawCallback;
+import com.sprd.launcher3.ext.DynamicIconUtils;
 import com.sprd.launcher3.ext.FeatureOption;
 import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
@@ -537,6 +540,7 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         float scale;
         int overlayAlpha;
         Drawable drawable;
+        TextView textView;
     }
 
     private float getLocalCenterForIndex(int index, int[] center) {
@@ -585,6 +589,7 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         canvas.translate(params.transX + mPreviewOffsetX, params.transY + mPreviewOffsetY);
         canvas.scale(params.scale, params.scale);
         Drawable d = params.drawable;
+        TextView textView = params.textView;
 
         if (d != null) {
             mOldBounds.set(d.getBounds());
@@ -594,11 +599,21 @@ public class FolderIcon extends FrameLayout implements FolderListener {
                 int oldBrightness = fd.getBrightness();
                 fd.setBrightness(params.overlayAlpha);
                 d.draw(canvas);
+                if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+                    canvas.restore();
+                    canvas.save();
+                    DynamicIconUtils.drawDynamicIconIfNeed(canvas, textView, params.scale, true);
+                }
                 fd.setBrightness(oldBrightness);
             } else {
                 d.setColorFilter(Color.argb(params.overlayAlpha, 255, 255, 255),
                         PorterDuff.Mode.SRC_ATOP);
                 d.draw(canvas);
+                if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+                    canvas.restore();
+                    canvas.save();
+                    DynamicIconUtils.drawDynamicIconIfNeed(canvas, textView, params.scale, true);
+                }
                 d.clearColorFilter();
             }
             d.setBounds(mOldBounds);
@@ -634,6 +649,7 @@ public class FolderIcon extends FrameLayout implements FolderListener {
                     d = getTopDrawable(v);
                     mParams = computePreviewItemDrawingParams(i, mParams);
                     mParams.drawable = d;
+                    mParams.textView = v;
                     drawPreviewItem(canvas, mParams);
                 }
             }
@@ -882,4 +898,26 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         setFolderUnreadNum(unreadNumTotal);
     }
     /**@**/
+
+    /**
+     * SPRD: Update dynamic icon of the items in the folder.
+     */
+    public void updateFolderDynamicIcon() {
+        final ArrayList<ShortcutInfo> contents = mInfo.contents;
+        final int contentsCount = contents.size();
+        ShortcutInfo shortcutInfo = null;
+        ComponentName componentName = null;
+        DynamicIconDrawCallback drawCallback = null;
+        for (int i = 0; i < contentsCount; i++) {
+            shortcutInfo = contents.get(i);
+            componentName = shortcutInfo.intent.getComponent();
+            drawCallback = DynamicIconUtils.getDICForComponent(componentName);
+            if (drawCallback != null) {
+                shortcutInfo.dynamicIconDrawCallback = drawCallback;
+            }
+            if (LogUtils.DEBUG_UNREAD) {
+                LogUtils.d(TAG, "updateFolderDynamicIcon end");
+            }
+        }
+    }
 }

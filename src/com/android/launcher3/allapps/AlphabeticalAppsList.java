@@ -25,6 +25,7 @@ import com.android.launcher3.compat.AlphabeticIndexCompat;
 import com.android.launcher3.compat.UserHandleCompat;
 import com.android.launcher3.model.AppNameComparator;
 import com.android.launcher3.util.ComponentKey;
+import com.sprd.launcher3.ext.DynamicIconUtils;
 import com.sprd.launcher3.ext.FeatureOption;
 import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
@@ -323,6 +324,14 @@ public class AlphabeticalAppsList {
                 if (LogUtils.DEBUG_UNREAD) {
                     LogUtils.d(TAG, "updateApps: app.componentName = " + app.componentName
                             + ",app.unreadNum = " + app.unreadNum);
+                }
+            }
+            if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+                app.dynamicIconDrawCallback = DynamicIconUtils.getDICForComponent(app.componentName);
+
+                if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                    LogUtils.d(TAG, "updateApps: app.componentName = " + app.componentName
+                            + ",app.dynamicIconDrawCallback = " + app.dynamicIconDrawCallback);
                 }
             }
             mComponentToAppMap.put(app.toComponentKey(), app);
