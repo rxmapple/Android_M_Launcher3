@@ -1,3 +1,8 @@
 <resources>
     <string name="module_name">com.sprd.launcher3.ext</string>
+
+    <!--SPRD Add for SPRD_WSPACE_ANIM_SUPPORT start {-->
+    <string name="effect_button_text">Effect</string>
+    <!--end }-->
+
 </resources>

@@ -76,6 +76,13 @@ import com.android.launcher3.widget.PendingAddShortcutInfo;
 import com.android.launcher3.widget.PendingAddWidgetInfo;
 import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
+//SPRD Add for SPRD_WSPACE_ANIM_SUPPORT start {
+import android.util.LayoutDirection;
+import android.view.animation.Transformation;
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.workspaceanim.FuncUtils;
+import com.sprd.launcher3.ext.workspaceanim.effect.EffectInfo;
+//end }
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1451,8 +1458,15 @@ public class Workspace extends PagedView
             } else {
                 // Sometimes the left parameter of the pages is animated during a layout transition;
                 // this parameter offsets it to keep the wallpaper from animating as well
+
+                int layoutTransitionOffsetForPage = getLayoutTransitionOffsetForPage(0);
+                //SPRD Add for SPRD_WSPACE_ANIM_SUPPORT start {
+                if(FeatureOption.SPRD_WSPACE_ANIM_SUPPORT) {
+                    layoutTransitionOffsetForPage = (FuncUtils.getCurentAnimInfo(getContext()) != null) ? 0 : getLayoutTransitionOffsetForPage(0);
+                }
+                //end }
                 int adjustedScroll =
-                        getScrollX() - firstPageScrollX - getLayoutTransitionOffsetForPage(0);
+                        getScrollX() - firstPageScrollX - layoutTransitionOffsetForPage; //getLayoutTransitionOffsetForPage(0);
                 float offset = Math.min(1, adjustedScroll / (float) scrollRange);
                 offset = Math.max(0, offset);
 
@@ -1678,6 +1692,14 @@ public class Workspace extends PagedView
 
     @Override
     protected void screenScrolled(int screenCenter) {
+        //SPRD Add for SPRD_WSPACE_ANIM_SUPPORT start {
+        if(FeatureOption.SPRD_WSPACE_ANIM_SUPPORT){
+            if(mState != State.OVERVIEW){
+                screenScrolledStandardUI(screenCenter);
+            }
+            return;
+        }
+        //end }
         updatePageAlphaValues(screenCenter);
         updateStateForCustomContent(screenCenter);
         enableHwLayersOnVisiblePages();
@@ -4636,4 +4658,72 @@ public class Workspace extends PagedView
         }
     }
     /**@}**/
+
+    //SPRD Add for SPRD_WSPACE_ANIM_SUPPORT start {
+    @Override
+    public boolean getChildStaticTransformation(View child, Transformation t) {
+        if(FeatureOption.SPRD_WSPACE_ANIM_SUPPORT){
+            return false;
+        }
+        return true;
+    }
+
+    public void screenScrolledStandardUI(int screenCenter) {
+
+        if(!FeatureOption.SPRD_WSPACE_ANIM_SUPPORT || mState == State.SPRING_LOADED){
+            return;
+        }
+
+        EffectInfo curentAnimInfo = FuncUtils.getCurentAnimInfo(getContext());
+
+        if(curentAnimInfo == null){
+            updatePageAlphaValues(screenCenter);
+            updateStateForCustomContent(screenCenter);
+            enableHwLayersOnVisiblePages();
+            return;
+        }
+
+        final boolean isRtl = getLayoutDirection() == LayoutDirection.RTL;//isLayoutRtl();
+        for (int i = 0; i < getChildCount(); i++) {
+            View v = getPageAt(i);
+            if (v != null) {
+
+                int mIndex = indexOfChild(v);
+                /*offset is progress values between -1 ~ 1*/
+                float offset = getScrollProgress(screenCenter,v,mIndex);
+                boolean isOverscrollingFirstPage = isRtl ? offset > 0 : offset < 0;
+                boolean isOverscrollingLastPage = isRtl ? offset < 0 : offset > 0;
+
+                v.setCameraDistance(mDensity * FuncUtils.CAMERA_DISTANCE);
+                int pageWidth = FuncUtils.getScaledMeasuredWidth(v);
+                int pageHeight = v.getMeasuredHeight();
+                if (offset != 0 && offset != 1 && offset != -1) {
+                    if (isOverscrollingFirstPage && getScrollX() < 0) {
+                        curentAnimInfo.getTransformationMatrix(v, offset,pageWidth,pageHeight,mDensity * FuncUtils.CAMERA_DISTANCE,true,true);
+                    } else if (isOverscrollingLastPage && getScrollX() > mMaxScrollX) {
+                        curentAnimInfo.getTransformationMatrix(v, offset,pageWidth,pageHeight,mDensity * FuncUtils.CAMERA_DISTANCE,true,false);
+                    } else {
+                        curentAnimInfo.getTransformationMatrix(v, offset,pageWidth,pageHeight,mDensity * FuncUtils.CAMERA_DISTANCE,false,false);
+                    }
+                } else {
+                    if ((offset == 1.0 && i == (getChildCount()-1))
+                            || (offset == -1.0 && i == 0)) {
+                        // overscroll last page or first page
+                        continue;
+                    }
+                    v.setPivotY(pageHeight / 2.0f);
+                    v.setPivotX(pageWidth / 2.0f);
+                    v.setRotationY(0f);
+                    v.setTranslationX(0f);
+                    v.setRotationX(0f);
+                    v.setRotation(0f);
+                    v.setScaleX(1.0f);
+                    v.setScaleY(1.0f);
+                    v.setAlpha(1f);
+                    enableHwLayersOnVisiblePages();
+                }
+            }
+        }
+    }
+    //end }
 }

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+        <FrameLayout
+            android:id="@+id/view_group"
+            android:layout_width="@dimen/workspace_preview_size"
+            android:layout_height="@dimen/workspace_preview_size"
+            android:layout_gravity="center|top"
+            android:padding="@dimen/workspace_normal_margin"
+            android:background="@drawable/pref_anim_preview_wallpaper">
+            <ImageView
+                android:id="@+id/desktop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/pref_anim_preview_desktop" />
+            <ImageView
+                android:id="@+id/drawer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/pref_anim_preview_desktop_2" />
+
+        </FrameLayout>
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/effect_lv"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:entries="@array/workspace_style_summaries"
+        android:choiceMode="singleChoice"
+        android:divider="@null"/>
+
+</LinearLayout>

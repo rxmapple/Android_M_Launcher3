@@ -29,4 +29,9 @@
     <dimen name="unread_text_number_size">14sp</dimen>
     <dimen name="unread_text_plus_size">10sp</dimen>
 
+    <!--SPRD Add for SPRD_WSPACE_ANIM_SUPPORT start {-->
+    <dimen name="workspace_normal_margin">16dp</dimen>
+    <dimen name="workspace_preview_size">160dp</dimen>
+    <!--end }-->
+
 </resources>

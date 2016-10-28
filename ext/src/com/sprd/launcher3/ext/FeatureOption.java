@@ -11,6 +11,10 @@ public class FeatureOption {
 
     public static final boolean SPRD_UNREAD_INFO_SUPPORT = getProp("ro.sprd_unread_info", true);
 
+    //SPRD Add for workspace animation SPRD_WSPACE_ANIM_SUPPORT start {
+    public static final boolean SPRD_WSPACE_ANIM_SUPPORT = getProp("ro.sprd_workspace_animation", true);
+    // end }
+
     private static boolean getProp(String prop, boolean devalues) {
         boolean ret = false;
 

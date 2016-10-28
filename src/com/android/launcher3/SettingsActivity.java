@@ -23,6 +23,11 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceFragment;
 import android.preference.SwitchPreference;
 
+//SPRD Add for SPRD_WSPACE_ANIM_SUPPORT start {
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.workspaceanim.FuncUtils;
+//end }
+
 /**
  * Settings activity for Launcher. Currently implements the following setting: Allow rotation
  */
@@ -60,6 +65,11 @@ public class SettingsActivity extends Activity {
             pref.setChecked(value.getBoolean(LauncherSettings.Settings.EXTRA_VALUE));
 
             pref.setOnPreferenceChangeListener(this);
+            //SPRD Add for SPRD_WSPACE_ANIM_SUPPORT start {
+            if(FeatureOption.SPRD_WSPACE_ANIM_SUPPORT) {
+                FuncUtils.addWorkspaceAnimationPref(getActivity(), getPreferenceScreen());
+            }
+            //end }
         }
 
         @Override
