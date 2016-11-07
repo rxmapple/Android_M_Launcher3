@@ -11,6 +11,8 @@ public class FeatureOption {
 
     public static final boolean SPRD_UNREAD_INFO_SUPPORT = getProp("ro.sprd_unread_info", true);
 
+    public static final boolean SPRD_SET_DEFAULT_HOME = getProp("ro.sprd_default_home", true);
+
     private static boolean getProp(String prop, boolean devalues) {
         boolean ret = false;
 

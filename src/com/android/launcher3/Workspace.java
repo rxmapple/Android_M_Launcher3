@@ -76,6 +76,11 @@ import com.android.launcher3.widget.PendingAddShortcutInfo;
 import com.android.launcher3.widget.PendingAddWidgetInfo;
 import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
+//SPRD add for SPRD_SET_DEFAULT_HOME begin
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.defaultpage.DefaultPageUtil;
+//SPRD add for SPRD_SET_DEFAULT_HOME end
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -567,6 +572,11 @@ public class Workspace extends PagedView
         newScreen.setSoundEffectsEnabled(false);
         mWorkspaceScreens.put(screenId, newScreen);
         mScreenOrder.add(insertIndex, screenId);
+        //SPRD add for SPRD_SET_DEFAULT_HOME begin
+        if (FeatureOption.SPRD_SET_DEFAULT_HOME){
+            DefaultPageUtil.addPageChange(mLauncher, insertIndex);
+        }
+        //SPRD add for SPRD_SET_DEFAULT_HOME end
         addView(newScreen, insertIndex);
 
         LauncherAccessibilityDelegate delegate =
@@ -780,6 +790,11 @@ public class Workspace extends PagedView
                 if (hasExtraEmptyScreen()) {
                     mWorkspaceScreens.remove(EXTRA_EMPTY_SCREEN_ID);
                     mScreenOrder.remove(EXTRA_EMPTY_SCREEN_ID);
+                    //SPRD add for SPRD_SET_DEFAULT_HOME begin
+                    if (FeatureOption.SPRD_SET_DEFAULT_HOME){
+                        DefaultPageUtil.removePageChange(mLauncher, cl);
+                    }
+                    //SPRD add for SPRD_SET_DEFAULT_HOME end
                     removeView(cl);
                     if (stripEmptyScreens) {
                         stripEmptyScreens();
@@ -911,7 +926,11 @@ public class Workspace extends PagedView
                 if (delegate != null && delegate.isInAccessibleDrag()) {
                     cl.enableAccessibleDrag(false, CellLayout.WORKSPACE_ACCESSIBILITY_DRAG);
                 }
-
+                //SPRD add for SPRD_SET_DEFAULT_HOME begin
+                if (FeatureOption.SPRD_SET_DEFAULT_HOME){
+                    DefaultPageUtil.removePageChange(mLauncher, cl);
+                }
+                //SPRD add for SPRD_SET_DEFAULT_HOME end
                 removeView(cl);
             } else {
                 // if this is the last non-custom content screen, convert it to the empty screen
@@ -1967,6 +1986,11 @@ public class Workspace extends PagedView
         for (int i = 0; i < count; i++) {
             CellLayout cl = ((CellLayout) getChildAt(i));
             mScreenOrder.add(getIdForScreen(cl));
+            //SPRD add for SPRD_SET_DEFAULT_HOME begin
+            if (FeatureOption.SPRD_SET_DEFAULT_HOME ) {
+                DefaultPageUtil.dragPageChange(mLauncher, i, cl);
+            }
+            //SPRD add for SPRD_SET_DEFAULT_HOME end
         }
 
         mLauncher.getModel().updateWorkspaceScreenOrder(mLauncher, mScreenOrder);
@@ -2052,7 +2076,22 @@ public class Workspace extends PagedView
             page.setContentDescription(null);
             page.setAccessibilityDelegate(null);
         }
+        //SPRD add for SPRD_SET_DEFAULT_HOME begin
+        if (FeatureOption.SPRD_SET_DEFAULT_HOME) {
+            DefaultPageUtil.setHomeVisiAndDefault(mLauncher, page, pageNo);
+        }
+        //SPRD add for SPRD_SET_DEFAULT_HOME end
     }
+
+    //SPRD add for SPRD_SET_DEFAULT_HOME begin
+    public void setDefaultPage(int defaultPage) {
+        mOriginalDefaultPage = mDefaultPage = defaultPage;
+    }
+
+    public int getDefaultPage() {
+        return mDefaultPage;
+    }
+    //SPRD add for SPRD_SET_DEFAULT_HOME end
 
     @Override
     public void onLauncherTransitionPrepare(Launcher l, boolean animated, boolean toWorkspace) {
@@ -3741,6 +3780,11 @@ public class Workspace extends PagedView
     }
 
     void setup(DragController dragController) {
+        //SPRD add for SPRD_SET_DEFAULT_HOME begin
+        if (FeatureOption.SPRD_SET_DEFAULT_HOME) {
+            DefaultPageUtil.setupDefaultPage(mLauncher,mDefaultPage);
+        }
+        //SPRD add for SPRD_SET_DEFAULT_HOME end
         mSpringLoadedDragController = new SpringLoadedDragController(mLauncher);
         mDragController = dragController;
 

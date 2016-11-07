@@ -55,6 +55,11 @@ import com.android.launcher3.accessibility.FolderAccessibilityHelper;
 import com.android.launcher3.accessibility.WorkspaceAccessibilityHelper;
 import com.android.launcher3.util.Thunk;
 
+//SPRD add for SPRD_SET_DEFAULT_HOME begin
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.defaultpage.DefaultPageUtil;
+import com.sprd.launcher3.ext.defaultpage.HomeImageView;
+//SPRD add for SPRD_SET_DEFAULT_HOME end
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -123,6 +128,10 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
     private final Paint mDragOutlinePaint = new Paint();
 
     private final ClickShadowView mTouchFeedbackView;
+
+    //SPRD add for SPRD_SET_DEFAULT_HOME begin
+    private HomeImageView mHomeImageView = null;
+    //SPRD add for SPRD_SET_DEFAULT_HOME end
 
     @Thunk HashMap<CellLayout.LayoutParams, Animator> mReorderAnimators = new HashMap<>();
     @Thunk HashMap<View, ReorderPreviewAnimation> mShakeAnimators = new HashMap<>();
@@ -281,7 +290,19 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         mTouchFeedbackView = new ClickShadowView(context);
         addView(mTouchFeedbackView);
         addView(mShortcutsAndWidgets);
+
+        //SPRD add for SPRD_SET_DEFAULT_HOME begin
+        if (FeatureOption.SPRD_SET_DEFAULT_HOME) {
+            mHomeImageView = DefaultPageUtil.createHomeImageView(mLauncher, this);
+        }
+        //SPRD add for SPRD_SET_DEFAULT_HOME end
     }
+
+    //SPRD add for SPRD_SET_DEFAULT_HOME begin
+    public HomeImageView getHomeImageView() {
+        return mHomeImageView;
+    }
+    //SPRD add for SPRD_SET_DEFAULT_HOME end
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void enableAccessibleDrag(boolean enable, int dragType) {
@@ -323,6 +344,11 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
+        //SPRD add for SPRD_SET_DEFAULT_HOME begin
+        if (FeatureOption.SPRD_SET_DEFAULT_HOME && DefaultPageUtil.isTouch(mHomeImageView, ev)) {
+            return false;
+        }
+        //SPRD add for SPRD_SET_DEFAULT_HOME end
         if (mUseTouchHelper ||
                 (mInterceptTouchListener != null && mInterceptTouchListener.onTouch(this, ev))) {
             return true;
@@ -816,6 +842,12 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
         int childHeightSize = heightSize - (getPaddingTop() + getPaddingBottom());
         if (mFixedCellWidth < 0 || mFixedCellHeight < 0) {
             int cw = DeviceProfile.calculateCellWidth(childWidthSize, mCountX);
+            //SPRD add for SPRD_SET_DEFAULT_HOME begin
+            if (FeatureOption.SPRD_SET_DEFAULT_HOME &&
+                    DefaultPageUtil.isHorizontalMode(childWidthSize,childHeightSize)) {
+                    cw = DefaultPageUtil.getCalculateCellWidth(mHomeImageView,childWidthSize,mCountX,cw);
+            }
+            //SPRD add for SPRD_SET_DEFAULT_HOME end
             int ch = DeviceProfile.calculateCellHeight(childHeightSize, mCountY);
             if (cw != mCellWidth || ch != mCellHeight) {
                 mCellWidth = cw;
@@ -851,39 +883,59 @@ public class CellLayout extends ViewGroup implements BubbleTextShadowHandler {
             mHeightGap = mOriginalHeightGap;
         }
 
-        // Make the feedback view large enough to hold the blur bitmap.
+        // Make the feedback view large enough to hold the b  lur bitmap.
         mTouchFeedbackView.measure(
                 MeasureSpec.makeMeasureSpec(mCellWidth + mTouchFeedbackView.getExtraSize(),
                         MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(mCellHeight + mTouchFeedbackView.getExtraSize(),
                         MeasureSpec.EXACTLY));
 
+        //SPRD modify for SPRD_SET_DEFAULT_HOME begin
+        int homeHeight = FeatureOption.SPRD_SET_DEFAULT_HOME ?
+                DefaultPageUtil.getHomeHeightOnMeasure(mHomeImageView,mCellWidth, mCellHeight) : 0;
+        int homeWidth = FeatureOption.SPRD_SET_DEFAULT_HOME ?
+                DefaultPageUtil.getHomeWidth(mHomeImageView) : 0;
+
         mShortcutsAndWidgets.measure(
-                MeasureSpec.makeMeasureSpec(newWidth, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(newWidth - homeWidth, MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(newHeight, MeasureSpec.EXACTLY));
+        //SPRD modify for SPRD_SET_DEFAULT_HOME end
 
         int maxWidth = mShortcutsAndWidgets.getMeasuredWidth();
         int maxHeight = mShortcutsAndWidgets.getMeasuredHeight();
+
         if (mFixedWidth > 0 && mFixedHeight > 0) {
-            setMeasuredDimension(maxWidth, maxHeight);
+            setMeasuredDimension(maxWidth, maxHeight  +
+                    + homeHeight);
         } else {
-            setMeasuredDimension(widthSize, heightSize);
+            setMeasuredDimension(widthSize, heightSize  +
+                    + homeHeight);
         }
+        //SPRD modify for SPRD_SET_DEFAULT_HOME end
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        //SPRD modify for SPRD_SET_DEFAULT_HOME begin
+        int homeWidth = FeatureOption.SPRD_SET_DEFAULT_HOME ?
+                DefaultPageUtil.getHomeWidth(mHomeImageView) : 0;
         int offset = getMeasuredWidth() - getPaddingLeft() - getPaddingRight() -
-                (mCountX * mCellWidth);
+                (mCountX * mCellWidth + homeWidth);
+        //SPRD modify for SPRD_SET_DEFAULT_HOME end
         int left = getPaddingLeft() + (int) Math.ceil(offset / 2f);
         int top = getPaddingTop();
 
         mTouchFeedbackView.layout(left, top,
                 left + mTouchFeedbackView.getMeasuredWidth(),
                 top + mTouchFeedbackView.getMeasuredHeight());
-        mShortcutsAndWidgets.layout(left, top,
+        //SPRD modify for SPRD_SET_DEFAULT_HOME begin
+        int homeHeight = FeatureOption.SPRD_SET_DEFAULT_HOME ?
+                DefaultPageUtil.getHomeHeightOnLayout(mHomeImageView, left,top,r - l,b - t) : 0;
+        mShortcutsAndWidgets.layout(left + homeWidth,
+                top + homeHeight,
                 left + r - l,
                 top + b - t);
+        //SPRD modify for SPRD_SET_DEFAULT_HOME end
     }
 
     @Override
