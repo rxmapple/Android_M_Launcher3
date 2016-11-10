@@ -30,10 +30,11 @@
     <dimen name="unread_text_plus_size">10sp</dimen>
 
     <!-- Add for dynamic calendar feature. -->
-    <dimen name="dynamic_calendar_date_size">38sp</dimen>
-    <dimen name="dynamic_calendar_week_size">12sp</dimen>
+    <dimen name="dynamic_calendar_date_size">36sp</dimen>
+    <dimen name="dynamic_calendar_week_size">10sp</dimen>
 
     <!-- Add for dynamic desk clock feature. -->
+    <dimen name="dynamic_clock_center_radius">2dp</dimen>
     <dimen name="dynamic_clock_second_length">24dp</dimen>
     <dimen name="dynamic_clock_second_width">0.5dp</dimen>
     <dimen name="dynamic_clock_minute_length">19dp</dimen>

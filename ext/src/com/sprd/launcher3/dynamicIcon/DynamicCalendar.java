@@ -64,8 +64,7 @@ public class DynamicCalendar extends DynamicIcon {
         mWeekSize = res.getDimensionPixelSize(R.dimen.dynamic_calendar_week_size);
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_TIME_TICK);
-        filter.addAction(Intent.ACTION_TIME_CHANGED);
+        filter.addAction(Intent.ACTION_DATE_CHANGED);
         filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
         mContext.registerReceiver(this, filter);
     }
@@ -102,19 +101,20 @@ public class DynamicCalendar extends DynamicIcon {
 
         Paint.FontMetrics fm = mDatePaint.getFontMetrics();
 
-        canvas.save();
+        int iconCenterX;
+        int iconCenterY;
         if (createBitmap) {
-            int width = canvas.getWidth();
-            int height = canvas.getHeight();
-            canvas.drawText(dayOfWeek, width/2, (float)(height/2 - fm.descent*1.6), mWeekPaint);
-            canvas.drawText(day, width/2, (float)(height/2 - fm.ascent*0.55), mDatePaint);
+            iconCenterX = canvas.getWidth() / 2;
+            iconCenterY = canvas.getHeight() / 2;
         } else {
             int offsetY = getOffsetY(icon);
-            int iconCenterX = icon.getScrollX() + (icon.getWidth() / 2);
-            int iconCenterY = icon.getScrollY() + icon.getPaddingTop()  + (offsetY / 2);
-            canvas.drawText(dayOfWeek, iconCenterX, (float)(iconCenterY - fm.descent*1.6), mWeekPaint);
-            canvas.drawText(day, iconCenterX, (float)(iconCenterY - fm.ascent*0.55), mDatePaint);
+            iconCenterX = icon.getScrollX() + (icon.getWidth() / 2);
+            iconCenterY = icon.getScrollY() + icon.getPaddingTop()  + (offsetY / 2);
         }
+
+        canvas.save();
+        canvas.drawText(dayOfWeek, iconCenterX, (float)(iconCenterY - fm.descent*1.4), mWeekPaint);
+        canvas.drawText(day, iconCenterX, (float)(iconCenterY - fm.ascent*0.55), mDatePaint);
         canvas.restore();
     }
 

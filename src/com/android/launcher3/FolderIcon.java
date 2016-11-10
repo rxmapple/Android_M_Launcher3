@@ -31,7 +31,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.os.Parcelable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -540,7 +539,6 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         float scale;
         int overlayAlpha;
         Drawable drawable;
-        TextView textView;
     }
 
     private float getLocalCenterForIndex(int index, int[] center) {
@@ -584,12 +582,19 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         return params;
     }
 
-    private void drawPreviewItem(Canvas canvas, PreviewItemDrawingParams params) {
+    private void drawPreviewItemEx(Canvas canvas, PreviewItemDrawingParams params, TextView textView) {
+        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            drawPreviewItem(canvas, params, textView);
+        } else {
+            drawPreviewItem(canvas, params, null);
+        }
+    }
+
+    private void drawPreviewItem(Canvas canvas, PreviewItemDrawingParams params, TextView textView) {
         canvas.save();
         canvas.translate(params.transX + mPreviewOffsetX, params.transY + mPreviewOffsetY);
         canvas.scale(params.scale, params.scale);
         Drawable d = params.drawable;
-        TextView textView = params.textView;
 
         if (d != null) {
             mOldBounds.set(d.getBounds());
@@ -599,26 +604,26 @@ public class FolderIcon extends FrameLayout implements FolderListener {
                 int oldBrightness = fd.getBrightness();
                 fd.setBrightness(params.overlayAlpha);
                 d.draw(canvas);
-                if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
-                    canvas.restore();
-                    canvas.save();
-                    DynamicIconUtils.drawDynamicIconIfNeed(canvas, textView, params.scale, true);
-                }
                 fd.setBrightness(oldBrightness);
             } else {
                 d.setColorFilter(Color.argb(params.overlayAlpha, 255, 255, 255),
                         PorterDuff.Mode.SRC_ATOP);
                 d.draw(canvas);
-                if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
-                    canvas.restore();
-                    canvas.save();
-                    DynamicIconUtils.drawDynamicIconIfNeed(canvas, textView, params.scale, true);
-                }
                 d.clearColorFilter();
             }
             d.setBounds(mOldBounds);
         }
         canvas.restore();
+        drawDynamicPartOfIcon(canvas, params.scale, textView);
+    }
+
+    private void drawDynamicPartOfIcon(Canvas canvas, float scale, TextView textView) {
+        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            canvas.save();
+            canvas.translate(0, (mMaxPerspectiveShift - getPaddingTop()) / 2);
+            DynamicIconUtils.drawDynamicIconIfNeed(canvas, textView, scale, true);
+            canvas.restore();
+        }
     }
 
     @Override
@@ -649,12 +654,11 @@ public class FolderIcon extends FrameLayout implements FolderListener {
                     d = getTopDrawable(v);
                     mParams = computePreviewItemDrawingParams(i, mParams);
                     mParams.drawable = d;
-                    mParams.textView = v;
-                    drawPreviewItem(canvas, mParams);
+                    drawPreviewItemEx(canvas, mParams, v);
                 }
             }
         } else {
-            drawPreviewItem(canvas, mAnimParams);
+            drawPreviewItemEx(canvas, mParams, null);
         }
 
         if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
@@ -911,7 +915,7 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         for (int i = 0; i < contentsCount; i++) {
             shortcutInfo = contents.get(i);
             componentName = shortcutInfo.intent.getComponent();
-            drawCallback = DynamicIconUtils.getDICForComponent(componentName);
+            drawCallback = DynamicIconUtils.getDIDCForComponent(componentName);
             if (drawCallback != null) {
                 shortcutInfo.dynamicIconDrawCallback = drawCallback;
             }

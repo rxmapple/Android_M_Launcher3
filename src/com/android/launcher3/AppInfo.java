@@ -86,7 +86,7 @@ public class AppInfo extends ItemInfo {
         this.container = ItemInfo.NO_ID;
 
         this.unreadNum = UnreadLoaderUtils.getUnreadNumberOfComponent( this.componentName );
-        this.dynamicIconDrawCallback = DynamicIconUtils.getDICForComponent(this.componentName);
+        this.dynamicIconDrawCallback = DynamicIconUtils.getDIDCForComponent(this.componentName);
 
         flags = initFlags(info);
         firstInstallTime = info.getFirstInstallTime();
@@ -112,7 +112,7 @@ public class AppInfo extends ItemInfo {
         super(info);
         componentName = info.componentName;
         unreadNum = UnreadLoaderUtils.getUnreadNumberOfComponent( componentName );
-        dynamicIconDrawCallback = DynamicIconUtils.getDICForComponent(componentName);
+        dynamicIconDrawCallback = DynamicIconUtils.getDIDCForComponent(componentName);
         title = Utilities.trim(info.title);
         intent = new Intent(info.intent);
         flags = info.flags;

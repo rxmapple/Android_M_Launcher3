@@ -327,7 +327,7 @@ public class AlphabeticalAppsList {
                 }
             }
             if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
-                app.dynamicIconDrawCallback = DynamicIconUtils.getDICForComponent(app.componentName);
+                app.dynamicIconDrawCallback = DynamicIconUtils.getDIDCForComponent(app.componentName);
 
                 if (LogUtils.DEBUG_DYNAMIC_ICON) {
                     LogUtils.d(TAG, "updateApps: app.componentName = " + app.componentName

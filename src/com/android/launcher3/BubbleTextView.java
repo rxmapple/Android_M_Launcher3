@@ -667,6 +667,6 @@ public class BubbleTextView extends TextView
             return;
         }
 
-        DynamicIconUtils.drawDynamicIconIfNeed(canvas, this, 1.0f, false);
+        DynamicIconUtils.drawDynamicIconIfNeed(canvas, this, DynamicIconUtils.STABLE_SCALE, false);
     }
 }

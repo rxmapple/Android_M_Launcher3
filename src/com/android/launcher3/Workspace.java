@@ -40,7 +40,6 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.Region.Op;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -2143,7 +2142,7 @@ public class Workspace extends PagedView
 
             //SPRD: Add for dynamic icon feature
             if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
-                DynamicIconUtils.drawDynamicIconIfNeed(destCanvas, v, 1.0f, true);
+                DynamicIconUtils.drawDynamicIconIfNeed(destCanvas, v, DynamicIconUtils.STABLE_SCALE, true);
             }
         } else {
             if (v instanceof FolderIcon) {
@@ -4671,7 +4670,7 @@ public class Workspace extends PagedView
                     final ShortcutInfo info = (ShortcutInfo) tag;
                     final Intent intent = info.intent;
                     final ComponentName componentName = intent.getComponent();
-                    info.dynamicIconDrawCallback = DynamicIconUtils.getDICForComponent(componentName);
+                    info.dynamicIconDrawCallback = DynamicIconUtils.getDIDCForComponent(componentName);
                     ((BubbleTextView) view).invalidate();
                 } else if (tag instanceof FolderInfo) {
                     ((FolderIcon) view).updateFolderDynamicIcon();

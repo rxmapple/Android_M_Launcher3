@@ -23,6 +23,8 @@ public class DynamicIconUtils {
 
     private static final String TAG = "DynamicIconUtils";
 
+    public static final float STABLE_SCALE = 1.0f;
+
     private static DynamicIconUtils INSTANCE;
     private static ArrayList<DynamicSupportInfo> DYNAMIC_SUPPORT_INFOS =
             new ArrayList<>();
@@ -85,7 +87,7 @@ public class DynamicIconUtils {
     /**
      * Get DynamicIconDrawCallback according to componentName
      */
-    public static DynamicIconDrawCallback getDICForComponent(ComponentName componentName) {
+    public static DynamicIconDrawCallback getDIDCForComponent(ComponentName componentName) {
         final int index = supportDynamicIcon(componentName);
         return getDynamicIconCallbackAt(index);
     }

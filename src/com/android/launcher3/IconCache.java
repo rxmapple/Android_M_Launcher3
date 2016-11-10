@@ -382,18 +382,7 @@ public class IconCache {
         }
         if (entry == null) {
             entry = new CacheEntry();
-            entry.icon = Utilities.createIconBitmap(app.getBadgedIcon(mIconDpi), mContext);
-
-            //SPRD: Add for change the stable background of dynamic icon.
-            /* if only add in the cacheLocked(...) function, when the local language changed, the dynamic
-            * icon background will become the original icon.
-            */
-            if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
-                Drawable background = DynamicIconUtils.getStableBGForComponent(app.getComponentName());
-                if (background != null) {
-                    entry.icon = Utilities.createIconBitmap(background, mContext);
-                }
-            }
+            entry.icon = createIconBitmap(app);
         }
         entry.title = app.getLabel();
         entry.contentDescription = mUserManager.getBadgedLabelForUser(entry.title, app.getUser());
@@ -433,6 +422,22 @@ public class IconCache {
         };
         mWorkerHandler.post(request);
         return new IconLoadRequest(request, mWorkerHandler);
+    }
+
+    /**
+     * SPRD: Add for change the stable background of dynamic icon.
+     * Create the bitmap for the stable part if dynamic icon supports.
+     * Otherwise, create the bitmap of the whole drawable.
+     */
+    private Bitmap createIconBitmap(LauncherActivityInfoCompat infoCompat) {
+        Drawable drawable = null;
+        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            drawable = DynamicIconUtils.getStableBGForComponent(infoCompat.getComponentName());
+        }
+        if (drawable == null) {
+            drawable = infoCompat.getBadgedIcon(mIconDpi);
+        }
+        return Utilities.createIconBitmap(drawable, mContext);
     }
 
     private Bitmap getNonNullIcon(CacheEntry entry, UserHandleCompat user) {
@@ -555,7 +560,7 @@ public class IconCache {
             // Check the DB first.
             if (!getEntryFromDB(cacheKey, entry, useLowResIcon)) {
                 if (info != null) {
-                    entry.icon = Utilities.createIconBitmap(info.getBadgedIcon(mIconDpi), mContext);
+                    entry.icon = createIconBitmap(info);
                 } else {
                     if (usePackageIcon) {
                         CacheEntry packageEntry = getEntryForPackageLocked(
@@ -572,14 +577,6 @@ public class IconCache {
                         if (DEBUG) Log.d(TAG, "using default icon for " +
                                 componentName.toShortString());
                         entry.icon = getDefaultIcon(user);
-                    }
-                }
-
-                //SPRD: Add for change the stable background of dynamic icon.
-                if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
-                    Drawable background = DynamicIconUtils.getStableBGForComponent(componentName);
-                    if (background != null) {
-                        entry.icon = Utilities.createIconBitmap(background, mContext);
                     }
                 }
             }

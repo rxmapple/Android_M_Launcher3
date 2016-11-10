@@ -2,6 +2,6 @@
 <resources>
     <!-- Add for dynamic desk clock feature. -->
     <color name="dynamic_clock_second_hand">#FFFF0000</color>
-    <color name="dynamic_clock_minute_hand">#FF000000</color>
-    <color name="dynamic_clock_hour_hand">#FF000000</color>
+    <color name="dynamic_clock_minute_hand">#FF455a64</color>
+    <color name="dynamic_clock_hour_hand">#FF455a64</color>
 </resources>

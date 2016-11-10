@@ -37,10 +37,11 @@ public class DynamicDeskclock extends DynamicIcon {
     private int mSecondLenght;
     private int mMinuteLenght;
     private int mHourLenght;
+    private int mCenterRadius;
 
     private int mLastHour;
     private int mLastMinute;
-    private int mLastSeconde;
+    private int mLastSecond;
 
     private Handler mSecondsHandler;
 
@@ -58,6 +59,8 @@ public class DynamicDeskclock extends DynamicIcon {
     @Override
     protected void init() {
         Resources res = mContext.getResources();
+
+        mCenterRadius = res.getDimensionPixelSize(R.dimen.dynamic_clock_center_radius);
 
         mSecondPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mSecondPaint.setColor(res.getColor(R.color.dynamic_clock_second_hand));
@@ -100,10 +103,10 @@ public class DynamicDeskclock extends DynamicIcon {
         int minute = c.get(Calendar.MINUTE);
         int second = c.get(Calendar.SECOND);
 
-        if (mLastSeconde != second
+        if (mLastSecond != second
                 || mLastMinute != minute
                 || mLastHour != hour) {
-            mLastSeconde = second;
+            mLastSecond = second;
             mLastMinute = minute;
             mLastHour = hour;
             return true;
@@ -127,6 +130,7 @@ public class DynamicDeskclock extends DynamicIcon {
     }
 
     private void draw(Canvas canvas, View icon, float scale, boolean createBitmap) {
+        scale = Math.abs(scale);
         mSecondPaint.setStrokeWidth(mSecondWidth * scale);
         mMinutePaint.setStrokeWidth(mMinuteWidth * scale);
         mHourPaint.setStrokeWidth(mHourWidth * scale);
@@ -136,7 +140,7 @@ public class DynamicDeskclock extends DynamicIcon {
         int minute = c.get(Calendar.MINUTE);
         int second = c.get(Calendar.SECOND);
 
-        mLastSeconde = second;
+        mLastSecond = second;
         mLastMinute = minute;
         if(hour >=12) {
             hour -= 12;
@@ -151,17 +155,17 @@ public class DynamicDeskclock extends DynamicIcon {
         double radianMinute = (Minutes / 60.0f * 360f)/180f * Math.PI;
         double radianHour = (Hour / 12.0f * 360f)/180f * Math.PI;
 
-        int secondX = (int) (scale * mSecondLenght * Math.sin(radianSecond));
-        int secondY = (int) (scale * mSecondLenght * Math.cos(radianSecond));
+        float secondX = (float) (scale * mSecondLenght * Math.sin(radianSecond));
+        float secondY = (float) (scale * mSecondLenght * Math.cos(radianSecond));
 
-        int minuteX = (int) (scale * mMinuteLenght * Math.sin(radianMinute));
-        int minuteY = (int) (scale * mMinuteLenght * Math.cos(radianMinute));
+        float minuteX = (float) (scale * mMinuteLenght * Math.sin(radianMinute));
+        float minuteY = (float) (scale * mMinuteLenght * Math.cos(radianMinute));
 
-        int hourX = (int) (scale * mHourLenght * Math.sin(radianHour));
-        int hourY = (int) (scale * mHourLenght * Math.cos(radianHour));
+        float hourX = (float) (scale * mHourLenght * Math.sin(radianHour));
+        float hourY = (float) (scale * mHourLenght * Math.cos(radianHour));
 
-        int iconCenterX;
-        int iconCenterY;
+        float iconCenterX;
+        float iconCenterY;
         if (createBitmap) {
             iconCenterX = canvas.getWidth()/2;
             iconCenterY = canvas.getHeight()/2;
@@ -171,7 +175,7 @@ public class DynamicDeskclock extends DynamicIcon {
             iconCenterY = icon.getScrollY() + icon.getPaddingTop()  + (offsetY / 2);
         }
         canvas.save();
-        canvas.drawCircle(iconCenterX, iconCenterY, 5, mSecondPaint);
+        canvas.drawCircle(iconCenterX, iconCenterY, scale * mCenterRadius, mSecondPaint);
         canvas.drawLine(iconCenterX, iconCenterY, iconCenterX + hourX, iconCenterY - hourY, mHourPaint);
         canvas.drawLine(iconCenterX, iconCenterY, iconCenterX + minuteX, iconCenterY - minuteY, mMinutePaint);
         canvas.drawLine(iconCenterX, iconCenterY, iconCenterX + secondX, iconCenterY - secondY, mSecondPaint);
