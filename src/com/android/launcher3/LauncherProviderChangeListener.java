@@ -11,5 +11,9 @@ public interface LauncherProviderChangeListener {
 
     public void onSettingsChanged(String settings, boolean value);
 
+    //SPRD add for SPRD_SETTINGS_ACTIVITY_SUPPORT start {
+    public void onSprdSettingsChanged(String settings, String value);
+    //end }
+
     public void onAppWidgetHostReset();
 }

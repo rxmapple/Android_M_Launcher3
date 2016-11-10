@@ -322,6 +322,11 @@ public class LauncherSettings {
         public static final String METHOD_GET_BOOLEAN = "get_boolean_setting";
         public static final String METHOD_SET_BOOLEAN = "set_boolean_setting";
 
+        //SPRD add for SPRD_SETTINGS_ACTIVITY_SUPPORT start {
+        public static final String METHOD_SPRD_GET_STRING = "get_sprd_string_setting";
+        public static final String METHOD_SPRD_SET_STRING = "set_sprd_string_setting";
+        //end }
+
         public static final String EXTRA_VALUE = "value";
         public static final String EXTRA_DEFAULT_VALUE = "default_value";
     }
