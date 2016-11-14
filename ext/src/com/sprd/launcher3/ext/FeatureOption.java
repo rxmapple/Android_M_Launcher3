@@ -9,9 +9,6 @@ import android.util.Log;
 public class FeatureOption {
     public static final String TAG = "Launcher3.FeatureOption";
 
-    //SPRD add for SPRD_SETTINGS_ACTIVITY_SUPPORT start {
-    public static final boolean SPRD_SETTINGS_ACTIVITY_SUPPORT = getProp("ro.sprd_settings_activity", true);
-    //end }
     public static final boolean SPRD_UNREAD_INFO_SUPPORT = getProp("ro.sprd_unread_info", true);
 
     private static boolean getProp(String prop, boolean devalues) {

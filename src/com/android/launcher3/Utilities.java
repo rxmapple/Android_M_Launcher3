@@ -710,40 +710,4 @@ public final class Utilities {
     public static String createDbSelectionQuery(String columnName, Iterable<?> values) {
         return String.format(Locale.ENGLISH, "%s IN (%s)", columnName, TextUtils.join(", ", values));
     }
-
-    //SPRD add for SPRD_SETTINGS_ACTIVITY_SUPPORT start {
-    /**
-     *
-     * @param context  to getContentResolver
-     * @param key  Preference key
-     *  @param defaultVal if get value is null, return defaultVal
-     */
-    public static boolean getLauncherSettingsBoolean(Context context, String key, boolean defaultVal) {
-        Bundle extras = new Bundle();
-        extras.putBoolean(LauncherSettings.Settings.EXTRA_DEFAULT_VALUE, defaultVal);
-        Bundle bundle = context.getContentResolver().call(
-                LauncherSettings.Settings.CONTENT_URI,
-                LauncherSettings.Settings.METHOD_GET_BOOLEAN,
-                key, extras);
-
-        if(bundle == null){
-            return defaultVal;
-        }
-        return bundle.getBoolean(LauncherSettings.Settings.EXTRA_VALUE);
-    }
-
-    public static String getLauncherSettingsString(Context context, String key, String defaultVal) {
-        Bundle extras = new Bundle();
-        extras.putString(LauncherSettings.Settings.EXTRA_DEFAULT_VALUE, defaultVal);
-        Bundle bundle = context.getContentResolver().call(
-                LauncherSettings.Settings.CONTENT_URI,
-                LauncherSettings.Settings.METHOD_SPRD_GET_STRING,
-                key, extras);
-
-        if(bundle == null){
-            return defaultVal;
-        }
-        return bundle.getString(LauncherSettings.Settings.EXTRA_VALUE);
-    }
-    //end }
 }

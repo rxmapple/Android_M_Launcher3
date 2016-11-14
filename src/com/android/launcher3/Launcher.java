@@ -112,9 +112,6 @@ import com.android.launcher3.widget.WidgetHostViewLoader;
 import com.android.launcher3.widget.WidgetsContainerView;
 import com.sprd.launcher3.ext.FeatureOption;
 import com.sprd.launcher3.ext.LogUtils;
-//SPRD add for SPRD_SETTINGS_ACTIVITY_SUPPORT start {
-import com.sprd.launcher3.ext.SprdSettingsActivity;
-//end }
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
 
 import java.io.File;
@@ -549,17 +546,6 @@ public class Launcher extends Activity
             showFirstRunClings();
         }
     }
-
-    //SPRD add for SPRD_SETTINGS_ACTIVITY_SUPPORT start {
-    @Override
-    public void onSprdSettingsChanged(String settings, String value) {
-        LogUtils.d(TAG,"onSprdSettingsChanged:"+settings+" value:"+value);
-        //ToDo: what you want ---> demo
-        /*if(settings.equals("your_preference_key")){
-        *}
-        */
-    }
-    //end }
 
     @Override
     public void onSettingsChanged(String settings, boolean value) {
@@ -2805,12 +2791,6 @@ public class Launcher extends Activity
         if (mLauncherCallbacks != null) {
             mLauncherCallbacks.onClickSettingsButton(v);
         } else {
-            //SPRD add for SPRD_SETTINGS_ACTIVITY_SUPPORT start {
-            if(FeatureOption.SPRD_SETTINGS_ACTIVITY_SUPPORT){
-                startActivity(new Intent(this, SprdSettingsActivity.class));
-                return;
-            }
-            //end }
             startActivity(new Intent(this, SettingsActivity.class));
         }
     }
