@@ -23,5 +23,15 @@
             android:defaultValue="@bool/allow_rotation"
             android:persistent="true"
     />
+    <!--SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {-->
+    <ListPreference
+        android:key="pref_mainmenu_transparent"
+        android:title="@string/mainmenu_bg_title"
+        android:defaultValue="white"
+        android:entries="@array/mainmenu_bg_entries"
+        android:entryValues="@array/mainmenu_bg_values"
+        android:persistent="false"
+        />
+    <!--end }-->
 
 </PreferenceScreen>

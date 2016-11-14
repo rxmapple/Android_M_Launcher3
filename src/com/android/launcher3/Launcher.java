@@ -116,6 +116,8 @@ import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.SprdSettingsActivity;
 //end }
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
+import com.sprd.launcher3.ext.mainmenubg.MainMenuBgDB;
+import com.sprd.launcher3.ext.mainmenubg.MainMenuBgUtils;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -357,6 +359,10 @@ public class Launcher extends Activity
     // the press state and keep this reference to reset the press state when we return to launcher.
     private BubbleTextView mWaitingForResume;
 
+    //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+    public MainMenuBgDB mMainMenuDB;
+    //end }
+
     protected static HashMap<String, CustomAppWidget> sCustomAppWidgets =
             new HashMap<String, CustomAppWidget>();
 
@@ -436,6 +442,12 @@ public class Launcher extends Activity
 
         LauncherAppState.setApplicationContext(getApplicationContext());
         LauncherAppState app = LauncherAppState.getInstance();
+
+        //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+        if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT) {
+            mMainMenuDB = MainMenuBgDB.getInstance(getApplicationContext());
+        }
+        //end }
 
         if (LogUtils.DEBUG_UNREAD) {
             LogUtils.d(TAG, "launcher unread support:" + FeatureOption.SPRD_UNREAD_INFO_SUPPORT);
@@ -555,6 +567,11 @@ public class Launcher extends Activity
     public void onSprdSettingsChanged(String settings, String value) {
         LogUtils.d(TAG,"onSprdSettingsChanged:"+settings+" value:"+value);
         //ToDo: what you want
+        //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+        if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT && settings.equals(MainMenuBgDB.MAIN_MENU_BG_KEY)) {
+            mMainMenuDB.setMainMenuBg(value);
+        }
+        //end }
     }
     //end }
 
@@ -3405,6 +3422,14 @@ public class Launcher extends Activity
         }
 
         if (toState == State.APPS) {
+            //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+            if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT) {
+                if(!MainMenuBgUtils.SUPPORT_BLACK_BG_ANIMATION
+                        && mMainMenuDB.isMainMenuBgBlack()) {
+                    animated = false;
+                }
+            }
+            //end }
             mStateTransitionAnimation.startAnimationToAllApps(mWorkspace.getState(), animated,
                     focusSearchBar);
         } else {

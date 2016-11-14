@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {-->
+    <string-array name="mainmenu_bg_entries">
+        <item>@string/mainmenu_bg_white</item>
+        <item>@string/mainmenu_bg_black</item>
+        <item>@string/mainmenu_bg_transparent</item>
+    </string-array>
+
+    <string-array name="mainmenu_bg_values" translatable="false">
+        <item>white</item>
+        <item>black</item>
+        <item>transparent</item>
+    </string-array>
+    <!--end }-->
+
+</resources>

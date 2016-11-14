@@ -13,6 +13,9 @@ public class FeatureOption {
     public static final boolean SPRD_SETTINGS_ACTIVITY_SUPPORT = getProp("ro.sprd_settings_activity", true);
     //end }
     public static final boolean SPRD_UNREAD_INFO_SUPPORT = getProp("ro.sprd_unread_info", true);
+    //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+    public static final boolean SPRD_MAIN_MENU_BG_SUPPORT = getProp("ro.sprd_main_menu_bg", true);
+    //end }
 
     private static boolean getProp(String prop, boolean devalues) {
         boolean ret = false;

@@ -60,7 +60,9 @@ public abstract class BaseContainerView extends LinearLayout implements Insettab
     @Override
     final public void setInsets(Rect insets) {
         mInsets.set(insets);
-        updateBackgroundAndPaddings();
+        //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT add a parameter, start {
+        updateBackgroundAndPaddings(false);
+        //end }
     }
 
     protected void setHasSearchBar() {
@@ -82,7 +84,9 @@ public abstract class BaseContainerView extends LinearLayout implements Insettab
         post(new Runnable() {
             @Override
             public void run() {
-                updateBackgroundAndPaddings();
+                //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT add a parameter, start {
+                updateBackgroundAndPaddings(false);
+                //end }
             }
         });
     }
@@ -90,7 +94,8 @@ public abstract class BaseContainerView extends LinearLayout implements Insettab
     /**
      * Update the backgrounds and padding in response to a change in the bounds or insets.
      */
-    protected void updateBackgroundAndPaddings() {
+    //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT add a parameter, start {
+    protected void updateBackgroundAndPaddings(boolean alwaysUpdate) {
         Rect padding;
         Rect searchBarBounds = new Rect();
         if (!isValidSearchBarBounds(mFixedSearchBarBounds)) {
@@ -119,7 +124,7 @@ public abstract class BaseContainerView extends LinearLayout implements Insettab
 
         // If either the computed container padding has changed, or the computed search bar bounds
         // has changed, then notify the container
-        if (!padding.equals(mContentPadding) || !searchBarBounds.equals(mSearchBarBounds)) {
+        if (!padding.equals(mContentPadding) || !searchBarBounds.equals(mSearchBarBounds) || alwaysUpdate) {
             mContentPadding.set(padding);
             mContentBounds.set(padding.left, padding.top,
                     getMeasuredWidth() - padding.right,
@@ -128,6 +133,7 @@ public abstract class BaseContainerView extends LinearLayout implements Insettab
             onUpdateBackgroundAndPaddings(mSearchBarBounds, padding);
         }
     }
+    //end }
 
     /**
      * To be implemented by container views to update themselves when the bounds changes.

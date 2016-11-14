@@ -33,6 +33,8 @@ import com.android.launcher3.allapps.AllAppsContainerView;
 import com.android.launcher3.util.UiThreadCircularReveal;
 import com.android.launcher3.util.Thunk;
 import com.android.launcher3.widget.WidgetsContainerView;
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.mainmenubg.MainMenuBgUtils;
 
 import java.util.HashMap;
 
@@ -119,6 +121,11 @@ public class LauncherStateTransitionAnimation {
     public void startAnimationToAllApps(final Workspace.State fromWorkspaceState,
             final boolean animated, final boolean startSearchAfterTransition) {
         final AllAppsContainerView toView = mLauncher.getAppsView();
+        //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+        if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT){
+            toView.updateBackgroundAndPaddings(true);
+        }
+        //end }
         final View buttonView = mLauncher.getAllAppsButton();
         PrivateTransitionCallbacks cb = new PrivateTransitionCallbacks() {
             @Override
@@ -187,8 +194,15 @@ public class LauncherStateTransitionAnimation {
         }
 
         if (fromState == Launcher.State.APPS || fromState == Launcher.State.APPS_SPRING_LOADED) {
-            startAnimationToWorkspaceFromAllApps(fromWorkspaceState, toWorkspaceState, toWorkspacePage,
+            if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT
+                    && !MainMenuBgUtils.SUPPORT_BLACK_BG_ANIMATION
+                    && mLauncher.mMainMenuDB.isMainMenuBgBlack()) {
+                    startAnimationToWorkspaceFromAllApps(fromWorkspaceState, toWorkspaceState, toWorkspacePage,
+                        false, onCompleteRunnable);
+            }else {
+                    startAnimationToWorkspaceFromAllApps(fromWorkspaceState, toWorkspaceState, toWorkspacePage,
                     animated, onCompleteRunnable);
+            }
         } else {
             startAnimationToWorkspaceFromWidgets(fromWorkspaceState, toWorkspaceState, toWorkspacePage,
                     animated, onCompleteRunnable);
@@ -427,7 +441,17 @@ public class LauncherStateTransitionAnimation {
                         // We set the alpha instead of visibility to ensure that the focus does not
                         // get taken from the all apps view
                         allAppsButtonView.setVisibility(View.VISIBLE);
-                        allAppsButtonView.setAlpha(0f);
+                        //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+                        if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT){
+                            if(mLauncher.mMainMenuDB.isMainMenuBgWhite()){
+                               allAppsButtonView.setAlpha(0f);
+                            }else{
+                               allAppsButtonView.setAlpha(1f);
+                            }
+                        }else{
+                            allAppsButtonView.setAlpha(0f);
+                        }
+                        //end }
                     }
                     public void onAnimationEnd(Animator animation) {
                         // Hide the reveal view

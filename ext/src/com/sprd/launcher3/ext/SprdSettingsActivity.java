@@ -28,6 +28,8 @@ import android.preference.SwitchPreference;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
+import com.sprd.launcher3.ext.mainmenubg.MainMenuBgDB;
+import com.sprd.launcher3.ext.mainmenubg.MainMenuBgUtils;
 
 /**
  * Created by SPREADTRUM\pichao.gao on 11/8/16.
@@ -66,6 +68,19 @@ public class SprdSettingsActivity extends Activity {
 
             pref.setOnPreferenceChangeListener(this);
 
+            //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+            if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT) {
+                ListPreference listPref = (ListPreference) findPreference(MainMenuBgDB.MAIN_MENU_BG_KEY);
+                String bg_value = UtilitiesExt.getLauncherSettingsString(getActivity(),
+                        MainMenuBgDB.MAIN_MENU_BG_KEY,
+                        MainMenuBgUtils.MAIN_MENU_BG_DEFAULT);
+                listPref.setValue(bg_value);
+                listPref.setOnPreferenceChangeListener(this);
+            }else{
+                ListPreference listPref = (ListPreference) findPreference(MainMenuBgDB.MAIN_MENU_BG_KEY);
+                getPreferenceScreen().removePreference(listPref);
+            }
+            //end }
 
         }
 

@@ -51,6 +51,9 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.LogUtils;
+import com.sprd.launcher3.ext.mainmenubg.MainMenuBgUtils;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
@@ -245,7 +248,9 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
         mSearchBarView = searchBarView;
         setHasSearchBar();
 
-        updateBackgroundAndPaddings();
+        //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT add a parameter, start {
+        updateBackgroundAndPaddings(false);
+        //end }
     }
 
     /**
@@ -325,7 +330,9 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
             mAppsRecyclerView.addItemDecoration(mItemDecoration);
         }
 
-        updateBackgroundAndPaddings();
+        //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT add a parameter, start {
+        updateBackgroundAndPaddings(false);
+        //end }
     }
 
     @Override
@@ -360,6 +367,16 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
+    //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+    @Override
+    public void updateBackgroundAndPaddings(boolean alwaysUpdate ) {
+        super.updateBackgroundAndPaddings(alwaysUpdate);
+        if(mLauncher.mMainMenuDB.getNeedToUpdateAllApps()){
+           mAppsRecyclerView.setAdapter(mAdapter);
+           mLauncher.mMainMenuDB.setNeedToUpdateAllApps(false);
+        }
+    }
+    //end }
 
     /**
      * Update the background and padding of the Apps view and children.  Instead of insetting the
@@ -369,15 +386,21 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
     @Override
     protected void onUpdateBackgroundAndPaddings(Rect searchBarBounds, Rect padding) {
         boolean isRtl = Utilities.isRtl(getResources());
+        Rect bgPadding = new Rect();
 
         // TODO: Use quantum_panel instead of quantum_panel_shape
-        InsetDrawable background = new InsetDrawable(
-                getResources().getDrawable(R.drawable.quantum_panel_shape), padding.left, 0,
-                padding.right, 0);
-        Rect bgPadding = new Rect();
-        background.getPadding(bgPadding);
-        mContainerView.setBackground(background);
-        mRevealView.setBackground(background.getConstantState().newDrawable());
+		//SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+        if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT) {
+            bgPadding = mLauncher.mMainMenuDB.updateBackgourndAndPaddings(mContainerView, mRevealView, mSearchBarView, padding);
+        }else {
+            InsetDrawable background = new InsetDrawable(
+                    getResources().getDrawable(R.drawable.quantum_panel_shape), padding.left, 0,
+                    padding.right, 0);
+            background.getPadding(bgPadding);
+            mContainerView.setBackground(background);
+            mRevealView.setBackground(background.getConstantState().newDrawable());
+        }
+        //end }
         mAppsRecyclerView.updateBackgroundPadding(bgPadding);
         mAdapter.updateBackgroundPadding(bgPadding);
 

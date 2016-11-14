@@ -43,6 +43,7 @@ import com.android.launcher3.Launcher;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.FeatureOption;
 
 import java.util.HashMap;
 import java.util.List;
@@ -455,6 +456,11 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
             case ICON_VIEW_TYPE: {
                 BubbleTextView icon = (BubbleTextView) mLayoutInflater.inflate(
                         R.layout.all_apps_icon, parent, false);
+                //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+                if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT && mLauncher.mMainMenuDB.getTextColorWhite()){
+                    icon.setTextColor(mLauncher.getResources().getColor(android.R.color.white));
+                }
+                //end }
                 icon.setOnTouchListener(mTouchListener);
                 icon.setOnClickListener(mIconClickListener);
                 icon.setOnLongClickListener(mIconLongClickListener);
@@ -466,6 +472,11 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
             case PREDICTION_ICON_VIEW_TYPE: {
                 BubbleTextView icon = (BubbleTextView) mLayoutInflater.inflate(
                         R.layout.all_apps_prediction_bar_icon, parent, false);
+                //SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {
+                if(FeatureOption.SPRD_MAIN_MENU_BG_SUPPORT && mLauncher.mMainMenuDB.getTextColorWhite()){
+                    icon.setTextColor(mLauncher.getResources().getColor(android.R.color.white));
+                }
+                //end }
                 icon.setOnTouchListener(mTouchListener);
                 icon.setOnClickListener(mIconClickListener);
                 icon.setOnLongClickListener(mIconLongClickListener);

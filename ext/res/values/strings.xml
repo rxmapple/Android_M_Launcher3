@@ -1,3 +1,10 @@
 <resources>
     <string name="module_name">com.sprd.launcher3.ext</string>
+
+    <!--SPRD add for SPRD_MAIN_MENU_BG_SUPPORT start {-->
+    <string name="mainmenu_bg_title">Main Menu Background</string>
+    <string name="mainmenu_bg_white">White</string>
+    <string name="mainmenu_bg_black">Black</string>
+    <string name="mainmenu_bg_transparent">Transparent</string>
+    <!--end }-->
 </resources>
