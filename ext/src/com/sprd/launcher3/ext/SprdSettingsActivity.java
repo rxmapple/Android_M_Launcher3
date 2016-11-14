@@ -59,7 +59,7 @@ public class SprdSettingsActivity extends Activity {
                     Utilities.ALLOW_ROTATION_PREFERENCE_KEY);
             pref.setPersistent(false);
 
-            boolean rotation_value = Utilities.getLauncherSettingsBoolean(getContext(),
+            boolean rotation_value = UtilitiesExt.getLauncherSettingsBoolean(getContext(),
                     Utilities.ALLOW_ROTATION_PREFERENCE_KEY,
                     false);
             pref.setChecked(rotation_value);
