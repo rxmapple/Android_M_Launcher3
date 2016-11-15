@@ -1,0 +1,21 @@
+<resources>
+
+    <!--SPRD Add for unreadNotifier function  start-->
+    <string name="unread_notifier_title">未读设置</string>
+    <string name="unread_miss_permission_hint">"缺少电话或短信权限, 请检查您的权限设定。"</string>
+    <string name="unread_misscall_hint">"缺乏必要的电话权限，请先申请权限。"</string>
+    <string name="unread_misssms_hint">"缺乏必要的短信权限，请先申请权限。"</string>
+
+    <string name="app_list_preference_none">请选择一个应用</string>
+
+    <string name="pref_missed_call_count_title">未接电话计数</string>
+    <string name="pref_missed_call_count_summary">请选择一个应用以显示未接电话个数</string>
+    <string name="pref_unread_sms_count_title">未读短信计数</string>
+    <string name="pref_unread_sms_count_summary">请选择一个应用以显示未读短信个数</string>
+    <string name="selected_text">已选择</string>
+
+    <string name="pref_provider_services">未读服务设置</string>
+    <string name="pref_services_running">开启</string>
+    <string name="pref_services_not_running">关闭</string>
+    <!--SPRD Add for unreadNotifier function  end-->
+</resources>

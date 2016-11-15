@@ -24,4 +24,8 @@
             android:persistent="true"
     />
 
+    <Preference
+        android:key="pref_unreadNotifier"
+        android:title="@string/unread_notifier_title"
+        />
 </PreferenceScreen>
