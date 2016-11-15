@@ -18,6 +18,7 @@
 package com.sprd.launcher3.ext;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -28,6 +29,7 @@ import android.preference.SwitchPreference;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
+import com.sprd.launcher3.ext.unreadnotifier.UnreadActivity;
 
 /**
  * Created by SPREADTRUM\pichao.gao on 11/8/16.
@@ -49,7 +51,8 @@ public class SprdSettingsActivity extends Activity {
      * This fragment shows the launcher preferences.
      */
     public static class SprdLauncherSettingsFragment extends PreferenceFragment
-            implements OnPreferenceChangeListener {
+            implements OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
+        private static final String PRE_KEY_UNREAD = "pref_unreadNotifier";
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -66,6 +69,15 @@ public class SprdSettingsActivity extends Activity {
 
             pref.setOnPreferenceChangeListener(this);
 
+            //add for unreadNotifier function start
+            Preference unreadPref = findPreference(PRE_KEY_UNREAD);
+            unreadPref.setOnPreferenceClickListener(this);
+            if(!FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
+                if(unreadPref != null) {
+                    getPreferenceScreen().removePreference(unreadPref);
+                }
+            }
+            //add for unreadNotifier function end
 
         }
 
@@ -88,6 +100,17 @@ public class SprdSettingsActivity extends Activity {
                         preference.getKey(), extras);
             }
             return true;
+        }
+
+        @Override
+        public boolean onPreferenceClick(Preference preference) {
+            String key = preference.getKey();
+            if(key.equals(PRE_KEY_UNREAD)) {
+                // start UnreadActivity
+                Intent unreadIntent = new Intent(getActivity(), UnreadActivity.class);
+                startActivity(unreadIntent);
+            }
+            return false;
         }
     }
 }

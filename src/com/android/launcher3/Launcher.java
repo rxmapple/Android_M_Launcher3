@@ -117,6 +117,7 @@ import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.SprdSettingsActivity;
 //end }
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
+import com.sprd.launcher3.ext.unreadnotifier.UnreadSettingsFragment;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -457,6 +458,8 @@ public class Launcher extends Activity
 
             // initialize unread loader
             mUnreadLoaderUtils.initialize(this);
+            UnreadSettingsFragment.initUnreadInfoIfNeeded(getApplicationContext());
+
             mUnreadLoaderUtils.loadAndInitUnreadShortcuts();
         }
 

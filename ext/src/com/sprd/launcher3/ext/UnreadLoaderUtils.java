@@ -115,20 +115,25 @@ public class UnreadLoaderUtils extends BroadcastReceiver {
                         + ", unreadNum = " + unreadNum + ", mCallbacks = " + mCallbacks
                         + getUnreadSupportShortcutInfo());
             }
+            updateComponentUnreadInfos(unreadNum , componentName);
 
-            if (mCallbacks != null && componentName != null && unreadNum != INVALID_NUM) {
-                final int index = supportUnreadFeature(componentName);
-                if (index >= 0) {
-                    boolean ret = setUnreadNumberAt(index, unreadNum);
-                    if (ret) {
-                        final UnreadCallbacks callbacks = mCallbacks.get();
-                        if (callbacks != null) {
-                            callbacks.bindComponentUnreadChanged(componentName, unreadNum);
-                        }
+        }
+    }
+
+    public void updateComponentUnreadInfos(int unreadNum, ComponentName componentName) {
+        if (mCallbacks != null && componentName != null && unreadNum != INVALID_NUM) {
+            final int index = supportUnreadFeature(componentName);
+            String key = componentName.flattenToShortString();
+            if (index >= 0) {
+                boolean ret = setUnreadNumberAt(index, unreadNum, key);
+                if (ret) {
+                    final UnreadCallbacks callbacks = mCallbacks.get();
+                    if (callbacks != null) {
+                        callbacks.bindComponentUnreadChanged(componentName, unreadNum);
                     }
-                } else {
-                    addComponentToSupportList(componentName, unreadNum);
                 }
+            } else {
+                addComponentToSupportList(componentName, unreadNum);
             }
         }
     }
@@ -310,7 +315,7 @@ public class UnreadLoaderUtils extends BroadcastReceiver {
      * @param unreadNum
      * @return
      */
-    static synchronized boolean setUnreadNumberAt(int index, int unreadNum) {
+    synchronized boolean setUnreadNumberAt(int index, int unreadNum, String key) {
         if (index >= 0 || index < sUnreadSupportShortcutsNum) {
             if (LogUtils.DEBUG_UNREAD) {
                 LogUtils.d(TAG, "setUnreadNumberAt: index = " + index
@@ -318,6 +323,7 @@ public class UnreadLoaderUtils extends BroadcastReceiver {
             }
             if (UNREAD_SUPPORT_SHORTCUTS.get(index).mUnreadNum != unreadNum) {
                 UNREAD_SUPPORT_SHORTCUTS.get(index).mUnreadNum = unreadNum;
+                saveUnreadNum(key, unreadNum);
                 return true;
             }
         }

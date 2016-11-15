@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <com.sprd.launcher3.ext.unreadnotifier.DefaultPhonePreference
+            android:key="pref_missed_call_count"
+            android:summary="@string/pref_missed_call_count_summary"
+            android:title="@string/pref_missed_call_count_title"
+            />
+
+        <com.sprd.launcher3.ext.unreadnotifier.DefaultSmsPreference
+            android:key="pref_unread_sms_count"
+            android:summary="@string/pref_unread_sms_count_summary"
+            android:title="@string/pref_unread_sms_count_title"/>
+
+
+</PreferenceScreen>

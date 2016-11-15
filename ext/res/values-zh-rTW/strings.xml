@@ -1,0 +1,21 @@
+<resources>
+
+    <!--SPRD Add for unreadNotifier function  start-->
+    <string name="unread_notifier_title">未讀設定</string>
+    <string name="unread_miss_permission_hint">"缺乏電話或簡訊許可權, 請檢查您的權限設定。"</string>
+    <string name="unread_misscall_hint">"缺乏必要的電話許可權，請先申請權限。"</string>
+    <string name="unread_misssms_hint">"缺乏必要的簡訊許可權，請先申請權限。"</string>
+
+    <string name="app_list_preference_none">請選擇壹個應用</string>
+
+    <string name="pref_missed_call_count_title">未接電話計數</string>
+    <string name="pref_missed_call_count_summary">請選擇壹個應用以顯示未接電話個數</string>
+    <string name="pref_unread_sms_count_title">未讀簡訊計數</string>
+    <string name="pref_unread_sms_count_summary">請選擇壹個應用以顯示未讀簡訊個數</string>
+    <string name="selected_text">已選擇</string>
+
+    <string name="pref_provider_services">未讀服務設定</string>
+    <string name="pref_services_running">開啟</string>
+    <string name="pref_services_not_running">關閉</string>
+    <!--SPRD Add for unreadNotifier function  end-->
+</resources>
