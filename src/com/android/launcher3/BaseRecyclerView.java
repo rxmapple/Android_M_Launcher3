@@ -20,9 +20,11 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.FeatureOption;
 
 
 /**
@@ -105,6 +107,9 @@ public abstract class BaseRecyclerView extends RecyclerView
     protected void onFinishInflate() {
         super.onFinishInflate();
         addOnItemTouchListener(this);
+        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            ((SimpleItemAnimator)getItemAnimator()).setSupportsChangeAnimations(false);
+        }
     }
 
     /**

@@ -26,6 +26,7 @@ import com.android.launcher3.compat.LauncherActivityInfoCompat;
 import com.android.launcher3.compat.UserHandleCompat;
 import com.android.launcher3.compat.UserManagerCompat;
 import com.android.launcher3.util.ComponentKey;
+import com.sprd.launcher3.ext.DynamicIconUtils;
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
 
 import java.util.ArrayList;
@@ -85,6 +86,7 @@ public class AppInfo extends ItemInfo {
         this.container = ItemInfo.NO_ID;
 
         this.unreadNum = UnreadLoaderUtils.getUnreadNumberOfComponent( this.componentName );
+        this.dynamicIconDrawCallback = DynamicIconUtils.getDIDCForComponent(this.componentName);
 
         flags = initFlags(info);
         firstInstallTime = info.getFirstInstallTime();
@@ -110,6 +112,7 @@ public class AppInfo extends ItemInfo {
         super(info);
         componentName = info.componentName;
         unreadNum = UnreadLoaderUtils.getUnreadNumberOfComponent( componentName );
+        dynamicIconDrawCallback = DynamicIconUtils.getDIDCForComponent(componentName);
         title = Utilities.trim(info.title);
         intent = new Intent(info.intent);
         flags = info.flags;

@@ -48,6 +48,8 @@ import com.android.launcher3.compat.UserManagerCompat;
 import com.android.launcher3.model.PackageItemInfo;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.DynamicIconUtils;
+import com.sprd.launcher3.ext.FeatureOption;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -380,7 +382,7 @@ public class IconCache {
         }
         if (entry == null) {
             entry = new CacheEntry();
-            entry.icon = Utilities.createIconBitmap(app.getBadgedIcon(mIconDpi), mContext);
+            entry.icon = createIconBitmap(app);
         }
         entry.title = app.getLabel();
         entry.contentDescription = mUserManager.getBadgedLabelForUser(entry.title, app.getUser());
@@ -420,6 +422,22 @@ public class IconCache {
         };
         mWorkerHandler.post(request);
         return new IconLoadRequest(request, mWorkerHandler);
+    }
+
+    /**
+     * SPRD: Add for change the stable background of dynamic icon.
+     * Create the bitmap for the stable part if dynamic icon supports.
+     * Otherwise, create the bitmap of the whole drawable.
+     */
+    private Bitmap createIconBitmap(LauncherActivityInfoCompat infoCompat) {
+        Drawable drawable = null;
+        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            drawable = DynamicIconUtils.getStableBGForComponent(infoCompat.getComponentName());
+        }
+        if (drawable == null) {
+            drawable = infoCompat.getBadgedIcon(mIconDpi);
+        }
+        return Utilities.createIconBitmap(drawable, mContext);
     }
 
     private Bitmap getNonNullIcon(CacheEntry entry, UserHandleCompat user) {
@@ -542,7 +560,7 @@ public class IconCache {
             // Check the DB first.
             if (!getEntryFromDB(cacheKey, entry, useLowResIcon)) {
                 if (info != null) {
-                    entry.icon = Utilities.createIconBitmap(info.getBadgedIcon(mIconDpi), mContext);
+                    entry.icon = createIconBitmap(info);
                 } else {
                     if (usePackageIcon) {
                         CacheEntry packageEntry = getEntryForPackageLocked(
