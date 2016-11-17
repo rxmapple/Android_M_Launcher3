@@ -66,6 +66,17 @@ public class SprdSettingsActivity extends Activity {
 
             pref.setOnPreferenceChangeListener(this);
 
+            SwitchPreference cyclePref = (SwitchPreference) findPreference(
+                    CircularSlidingUtils.ALLOW_CIRCULAR_SLIDING_PREFERENCE_KEY);
+            if (FeatureOption.SPRD_CIRCULAR_SLIDING_SUPPORT) {
+                boolean cycleValue = UtilitiesExt.getLauncherSettingsBoolean(getContext(),
+                        CircularSlidingUtils.ALLOW_CIRCULAR_SLIDING_PREFERENCE_KEY,
+                        false);
+                cyclePref.setChecked(cycleValue);
+                cyclePref.setOnPreferenceChangeListener(this);
+            } else {
+                getPreferenceScreen().removePreference(cyclePref);
+            }
 
         }
 

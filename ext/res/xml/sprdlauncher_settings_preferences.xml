@@ -24,4 +24,8 @@
             android:persistent="true"
     />
 
+    <SwitchPreference
+            android:key="pref_allowCircularSliding"
+            android:title="@string/allow_circular_sliding_title"
+    />
 </PreferenceScreen>

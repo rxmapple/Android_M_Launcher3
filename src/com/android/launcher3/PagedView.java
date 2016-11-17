@@ -50,8 +50,12 @@ import android.view.animation.Interpolator;
 
 import com.android.launcher3.util.LauncherEdgeEffect;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.CircularSlidingUtils;
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.UtilitiesExt;
 
 import java.util.ArrayList;
+import android.content.SharedPreferences;
 
 /**
  * An abstraction of the original Workspace which supports browsing through a
@@ -61,6 +65,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     private static final String TAG = "PagedView";
     private static final boolean DEBUG = false;
     protected static final int INVALID_PAGE = -1;
+    public static boolean mIsSupportCircular;
+    private int[] mPageScrollsForCircleSlide = new int[] { 0, 0 };
 
     // the min drag distance for a fling to register, to prevent random page shifts
     private static final int MIN_LENGTH_FOR_FLING = 25;
@@ -233,6 +239,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
 
         setHapticFeedbackEnabled(false);
         mIsRtl = Utilities.isRtl(getResources());
+        mIsSupportCircular = UtilitiesExt.getLauncherSettingsBoolean(context, CircularSlidingUtils.ALLOW_CIRCULAR_SLIDING_PREFERENCE_KEY, false);
         init();
     }
 
@@ -403,7 +410,15 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
      * Returns the index of page to be shown immediately afterwards.
      */
     int getNextPage() {
-        return (mNextPage != INVALID_PAGE) ? mNextPage : mCurrentPage;
+        int nextPage = mNextPage;
+        if (mIsSupportCircular) {
+            if (mNextPage == CircularSlidingUtils.OVER_FIRST_PAGE_INDEX) {
+                nextPage = getChildCount() -1;
+            } else if (mNextPage == getChildCount()) {
+                nextPage = 0;
+            }
+        }
+        return (mNextPage != INVALID_PAGE) ? nextPage : mCurrentPage;
     }
 
     int getPageCount() {
@@ -575,35 +590,30 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
             x = Math.min(x, mFreeScrollMaxScrollX);
             x = Math.max(x, mFreeScrollMinScrollX);
         }
-
-        boolean isXBeforeFirstPage = mIsRtl ? (x > mMaxScrollX) : (x < 0);
-        boolean isXAfterLastPage = mIsRtl ? (x < 0) : (x > mMaxScrollX);
-        if (isXBeforeFirstPage) {
-            super.scrollTo(mIsRtl ? mMaxScrollX : 0, y);
-            if (mAllowOverScroll) {
-                mWasInOverscroll = true;
-                if (mIsRtl) {
-                    overScroll(x - mMaxScrollX);
-                } else {
-                    overScroll(x);
-                }
-            }
-        } else if (isXAfterLastPage) {
-            super.scrollTo(mIsRtl ? 0 : mMaxScrollX, y);
-            if (mAllowOverScroll) {
-                mWasInOverscroll = true;
-                if (mIsRtl) {
-                    overScroll(x);
-                } else {
-                    overScroll(x - mMaxScrollX);
-                }
-            }
-        } else {
-            if (mWasInOverscroll) {
-                overScroll(0);
-                mWasInOverscroll = false;
-            }
+        if (mIsSupportCircular || (x >=0 && x <= mMaxScrollX)) {
             super.scrollTo(x, y);
+        } else {
+            boolean isXBeforeFirstPage = mIsRtl ? (x > mMaxScrollX) : (x < 0);
+            boolean isXAfterLastPage = mIsRtl ? (x < 0) : (x > mMaxScrollX);
+            if (isXBeforeFirstPage) {
+                super.scrollTo(mIsRtl ? mMaxScrollX : 0, y);
+                if (mAllowOverScroll) {
+                    if (mIsRtl) {
+                        overScroll(x - mMaxScrollX);
+                    } else {
+                        overScroll(x);
+                    }
+                }
+            } else if (isXAfterLastPage) {
+                super.scrollTo(mIsRtl ? 0 : mMaxScrollX, y);
+                if (mAllowOverScroll && !mIsSupportCircular) {
+                    if (mIsRtl) {
+                        overScroll(x);
+                    } else {
+                        overScroll(x - mMaxScrollX);
+                    }
+                }
+            }
         }
 
         mTouchX = x;
@@ -651,7 +661,18 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         } else if (mNextPage != INVALID_PAGE) {
             sendScrollAccessibilityEvent();
 
-            mCurrentPage = validateNewPage(mNextPage);
+            if (!mIsSupportCircular || (mNextPage != CircularSlidingUtils.OVER_FIRST_PAGE_INDEX && mNextPage != getPageCount())
+                    || (mPageScrolls == null)) {
+                mCurrentPage = validateNewPage(mNextPage);
+            } else {
+                if (mNextPage == CircularSlidingUtils.OVER_FIRST_PAGE_INDEX) {
+                    mCurrentPage = getPageCount() - 1;
+                    scrollTo(mPageScrolls[mCurrentPage], getScrollY());
+                } else if (mNextPage == getPageCount()) {
+                    mCurrentPage = 0;
+                    scrollTo(mPageScrolls[mCurrentPage], getScrollY());
+                }
+            }
             mNextPage = INVALID_PAGE;
             notifyPageSwitchListener();
 
@@ -864,6 +885,16 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         if (mPageScrolls == null || childCount != mChildCountOnLastLayout) {
             mPageScrolls = new int[childCount];
         }
+        if (FeatureOption.SPRD_CIRCULAR_SLIDING_SUPPORT) {
+            // calculate over first page
+            int overPageIndex = CircularSlidingUtils.OVER_FIRST_PAGE_SCROLL_INDEX;
+            if (mIsRtl) {
+                // calculate over last page
+                overPageIndex = CircularSlidingUtils.OVER_LAST_PAGE_SCROLL_INDEX;
+            }
+            // here we assume that one page occupied width is equals to view port's width.
+            mPageScrollsForCircleSlide[overPageIndex] = -(mPageSpacing + mViewport.width());
+        }
 
         for (int i = startIndex; i != endIndex; i += delta) {
             final View child = getPageAt(i);
@@ -896,17 +927,36 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                 } else {
                     nextLp = null;
                 }
-
                 // Prevent full screen pages from showing in the viewport
                 // when they are not the current page.
-                if (lp.isFullScreenPage) {
-                    pageGap = getPaddingLeft();
-                } else if (nextLp != null && nextLp.isFullScreenPage) {
-                    pageGap = getPaddingRight();
+                if (FeatureOption.SPRD_CIRCULAR_SLIDING_SUPPORT) {
+                    if (lp.isFullScreenPage) {
+                        pageGap += getPaddingLeft();
+                    } else if (nextLp != null && nextLp.isFullScreenPage) {
+                        pageGap += getPaddingRight();
+                    } else {
+                        pageGap += (getPaddingRight() + getPaddingLeft());
+                    }
+                } else {
+                    if (lp.isFullScreenPage) {
+                        pageGap = getPaddingLeft();
+                    } else if (nextLp != null && nextLp.isFullScreenPage) {
+                        pageGap = getPaddingRight();
+                    }
                 }
 
                 childLeft += childWidth + pageGap + getChildGap();
             }
+        }
+        if (FeatureOption.SPRD_CIRCULAR_SLIDING_SUPPORT) {
+            // calc over last page
+            int overPageIndex = CircularSlidingUtils.OVER_LAST_PAGE_SCROLL_INDEX;
+            if (mIsRtl) {
+                // calc over first page
+                overPageIndex = CircularSlidingUtils.OVER_FIRST_PAGE_SCROLL_INDEX;
+            }
+            // here we assume that one page occupied width is equals to view port's width.
+            mPageScrollsForCircleSlide[overPageIndex] = (mViewport.width() + mPageSpacing) * childCount;
         }
 
         final LayoutTransition transition = getLayoutTransition();
@@ -1148,6 +1198,9 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
 
                 mForceDrawAllChildrenNextFrame = false;
                 canvas.restore();
+            }
+            if (mIsSupportCircular) {
+               drawCircularPage(canvas);
             }
         }
     }
@@ -1481,9 +1534,28 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         }
 
         if (adjacentPage < 0 || adjacentPage > count - 1) {
-            totalDistance = v.getMeasuredWidth() + mPageSpacing;
+            if (FeatureOption.SPRD_CIRCULAR_SLIDING_SUPPORT) {
+                totalDistance = v.getMeasuredWidth() + getPaddingLeft() + getPaddingRight() + mPageSpacing;
+            } else {
+                totalDistance = v.getMeasuredWidth() + mPageSpacing;
+            }
         } else {
             totalDistance = Math.abs(getScrollForPage(adjacentPage) - getScrollForPage(page));
+        }
+        if (mIsSupportCircular) {
+            if (mIsRtl) {
+                if (getScrollX() < 0 && page == 0) {
+                    delta = screenCenter + halfScreenSize;
+                } else if (getScrollX() > mMaxScrollX && page == getChildCount() - 1) {
+                    delta = screenCenter - mMaxScrollX - halfScreenSize - totalDistance;
+                }
+            } else {
+                if (getScrollX() > mMaxScrollX && page == 0) {
+                    delta = screenCenter - mMaxScrollX - halfScreenSize - totalDistance;
+                } else if (getScrollX() < 0 && page == count - 1) {
+                    delta = screenCenter + halfScreenSize;
+                }
+            }
         }
 
         float scrollProgress = delta / (totalDistance * 1.0f);
@@ -1493,6 +1565,13 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     }
 
     public int getScrollForPage(int index) {
+        if (mIsSupportCircular) {
+            if (index == CircularSlidingUtils.OVER_FIRST_PAGE_INDEX) {
+                return mPageScrollsForCircleSlide[CircularSlidingUtils.OVER_FIRST_PAGE_SCROLL_INDEX];
+            } else if (index == getChildCount()){
+                return mPageScrollsForCircleSlide[CircularSlidingUtils.OVER_LAST_PAGE_SCROLL_INDEX];
+            }
+        }
         if (mPageScrolls == null || index >= mPageScrolls.length || index < 0) {
             return 0;
         } else {
@@ -1779,12 +1858,16 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                     boolean isDeltaXLeft = mIsRtl ? deltaX > 0 : deltaX < 0;
                     boolean isVelocityXLeft = mIsRtl ? velocityX > 0 : velocityX < 0;
                     if (((isSignificantMove && !isDeltaXLeft && !isFling) ||
-                            (isFling && !isVelocityXLeft)) && mCurrentPage > 0) {
+                            (isFling && !isVelocityXLeft))
+                            && (mIsSupportCircular ? (mCurrentPage >= 0) : (mCurrentPage > 0))) {
                         finalPage = returnToOriginalPage ? mCurrentPage : mCurrentPage - 1;
+                        if (FeatureOption.SPRD_CIRCULAR_SLIDING_SUPPORT && finalPage == -1) {
+                            finalPage = CircularSlidingUtils.OVER_FIRST_PAGE_INDEX;
+                        }
                         snapToPageWithVelocity(finalPage, velocityX);
                     } else if (((isSignificantMove && isDeltaXLeft && !isFling) ||
-                            (isFling && isVelocityXLeft)) &&
-                            mCurrentPage < getChildCount() - 1) {
+                            (isFling && isVelocityXLeft))
+                            && (mIsSupportCircular ? (mCurrentPage < getChildCount()) : (mCurrentPage < getChildCount() - 1))) {
                         finalPage = returnToOriginalPage ? mCurrentPage : mCurrentPage + 1;
                         snapToPageWithVelocity(finalPage, velocityX);
                     } else {
@@ -2005,7 +2088,11 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     }
 
     protected void snapToPageWithVelocity(int whichPage, int velocity) {
-        whichPage = validateNewPage(whichPage);
+        if (mIsSupportCircular) {
+            whichPage = CircularSlidingUtils.validateNewPage(whichPage, getPageCount());
+        } else {
+            whichPage = validateNewPage(whichPage);
+        }
         int halfScreenSize = getViewportWidth() / 2;
 
         final int newX = getScrollForPage(whichPage);
@@ -2056,7 +2143,11 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
 
     protected void snapToPage(int whichPage, int duration, boolean immediate,
             TimeInterpolator interpolator) {
-        whichPage = validateNewPage(whichPage);
+        if (mIsSupportCircular) {
+            whichPage = CircularSlidingUtils.validateNewPage(whichPage, getPageCount());
+        } else {
+            whichPage = validateNewPage(whichPage);
+        }
 
         int newX = getScrollForPage(whichPage);
         final int delta = newX - getScrollX();
@@ -2069,7 +2160,11 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
 
     protected void snapToPage(int whichPage, int delta, int duration, boolean immediate,
             TimeInterpolator interpolator) {
-        whichPage = validateNewPage(whichPage);
+        if (mIsSupportCircular) {
+            whichPage = CircularSlidingUtils.validateNewPage(whichPage, getPageCount());
+        } else {
+            whichPage = validateNewPage(whichPage);
+        }
 
         mNextPage = whichPage;
         View focusedChild = getFocusedChild();
@@ -2342,5 +2437,34 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     @Override
     public boolean onHoverEvent(android.view.MotionEvent event) {
         return true;
+    }
+    private void drawCircularPage(Canvas canvas) {
+        boolean isXBeforeFirstPage = mIsRtl ? (getScrollX() > mMaxScrollX) : (getScrollX() < 0);
+        boolean isXAfterLastPage = mIsRtl ? (getScrollX() < 0) : (getScrollX() > mMaxScrollX);
+        if (isXBeforeFirstPage || isXAfterLastPage) {
+            long drawingTime = getDrawingTime();
+            int width = mViewport.width();
+            int childCount = getChildCount();
+            canvas.save();
+            canvas.clipRect(getScrollX(), getScrollY(), getScrollX() + getRight() - getLeft(),
+                    getScrollY() + getBottom() - getTop());
+            // here we assume that a page's horizontal padding plus it's measured width
+            // equals to ViewPort's width
+            int offset = (mIsRtl ? - childCount : childCount) * (width + mPageSpacing);
+            if (isXBeforeFirstPage) {
+                canvas.translate(- offset, 0);
+                drawChild(canvas, getPageAt(childCount - 1), drawingTime);
+                canvas.translate(+ offset, 0);
+            } else if (isXAfterLastPage) {
+                canvas.translate(+ offset, 0);
+                drawChild(canvas, getPageAt(0), drawingTime);
+                canvas.translate(- offset, 0);
+            }
+            // Always draw the drag view on top (if there is one)
+            if (mDragView != null) {
+                drawChild(canvas, mDragView, drawingTime);
+            }
+            canvas.restore();
+        }
     }
 }

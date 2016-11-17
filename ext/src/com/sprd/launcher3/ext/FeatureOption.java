@@ -14,6 +14,10 @@ public class FeatureOption {
     //end }
     public static final boolean SPRD_UNREAD_INFO_SUPPORT = getProp("ro.sprd_unread_info", true);
 
+    //SPRD Add for Desktop cycle start {
+    public static final boolean SPRD_CIRCULAR_SLIDING_SUPPORT = getProp("ro.sprd_circular_sliding", true);
+    // end }
+
     private static boolean getProp(String prop, boolean devalues) {
         boolean ret = false;
 

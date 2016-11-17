@@ -116,6 +116,7 @@ import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.SprdSettingsActivity;
 //end }
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
+import com.sprd.launcher3.ext.CircularSlidingUtils;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -565,6 +566,8 @@ public class Launcher extends Activity
             if (!waitUntilResume(mUpdateOrientationRunnable, true)) {
                 mUpdateOrientationRunnable.run();
             }
+        } else if (CircularSlidingUtils.ALLOW_CIRCULAR_SLIDING_PREFERENCE_KEY.equals(settings)) {
+            PagedView.mIsSupportCircular = value;
         }
     }
 

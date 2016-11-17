@@ -76,6 +76,7 @@ import com.android.launcher3.widget.PendingAddShortcutInfo;
 import com.android.launcher3.widget.PendingAddWidgetInfo;
 import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
+import com.sprd.launcher3.ext.FeatureOption;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1449,20 +1450,51 @@ public class Workspace extends PagedView
             if (scrollRange == 0) {
                 return 0;
             } else {
-                // Sometimes the left parameter of the pages is animated during a layout transition;
-                // this parameter offsets it to keep the wallpaper from animating as well
-                int adjustedScroll =
-                        getScrollX() - firstPageScrollX - getLayoutTransitionOffsetForPage(0);
-                float offset = Math.min(1, adjustedScroll / (float) scrollRange);
-                offset = Math.max(0, offset);
+                if (FeatureOption.SPRD_CIRCULAR_SLIDING_SUPPORT) {
+                    int scrollX = getScrollX();
+                    if (mIsSupportCircular) {
+                        if (scrollX < 0) {
+                            scrollX = -scrollX;
+                            // here we assume that one page occupied width is equals to view port's width.
+                            scrollX *= Math.abs((lastIndex - firstIndex));
+                        } else if (scrollX > scrollRange) {
+                            scrollX = scrollX - scrollRange;
+                            scrollX = scrollRange - scrollX * Math.abs((lastIndex - firstIndex));
+                        }
+                   }
+                   // Sometimes the left parameter of the pages is animated during a layout transition;
+                   // this parameter offsets it to keep the wallpaper from animating as well
+                   int adjustedScroll =
+                           scrollX - firstPageScrollX - getLayoutTransitionOffsetForPage(0);
 
-                // On RTL devices, push the wallpaper offset to the right if we don't have enough
-                // pages (ie if numScrollingPages < MIN_PARALLAX_PAGE_SPAN)
-                if (!mWallpaperIsLiveWallpaper && numScrollingPages < MIN_PARALLAX_PAGE_SPAN
-                        && mIsRtl) {
-                    return offset * (parallaxPageSpan - numScrollingPages + 1) / parallaxPageSpan;
+                   float offset = Math.min(1, adjustedScroll / (float) scrollRange);
+                   offset = Math.max(0, offset);
+
+                   // On RTL devices, push the wallpaper offset to the right if we don't have enough
+                   // pages (ie if numScrollingPages < MIN_PARALLAX_PAGE_SPAN)
+                   float finalOffset = 0;
+                   if (getLayoutDirection() == View.LAYOUT_DIRECTION_RTL) {
+                       finalOffset = 1 + (offset -1) * (numScrollingPages - 1) / parallaxPageSpan;
+                   } else {
+                       finalOffset = offset * (numScrollingPages - 1) / parallaxPageSpan;
+                   }
+                   return finalOffset;
+                } else {
+                    // Sometimes the left parameter of the pages is animated during a layout transition;
+                    // this parameter offsets it to keep the wallpaper from animating as well
+                    int adjustedScroll =
+                            getScrollX() - firstPageScrollX - getLayoutTransitionOffsetForPage(0);
+                    float offset = Math.min(1, adjustedScroll / (float) scrollRange);
+                    offset = Math.max(0, offset);
+
+                    // On RTL devices, push the wallpaper offset to the right if we don't have enough
+                    // pages (ie if numScrollingPages < MIN_PARALLAX_PAGE_SPAN)
+                    if (!mWallpaperIsLiveWallpaper && numScrollingPages < MIN_PARALLAX_PAGE_SPAN
+                            && mIsRtl) {
+                        return offset * (parallaxPageSpan - numScrollingPages + 1) / parallaxPageSpan;
+                    }
+                    return offset * (numScrollingPages - 1) / parallaxPageSpan;
                 }
-                return offset * (numScrollingPages - 1) / parallaxPageSpan;
             }
         }
 
@@ -4465,7 +4497,12 @@ public class Workspace extends PagedView
         if (hasCustomContent() && getNextPage() == 0) {
             return mCustomContentDescription;
         }
-        int page = (mNextPage != INVALID_PAGE) ? mNextPage : mCurrentPage;
+        int page;
+        if (FeatureOption.SPRD_CIRCULAR_SLIDING_SUPPORT) {
+            page = super.getNextPage();
+        } else {
+            page = (mNextPage != INVALID_PAGE) ? mNextPage : mCurrentPage;
+        }
         return getPageDescription(page);
     }
 
