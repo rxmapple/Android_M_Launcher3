@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.view.View;
 
-import com.android.launcher3.BubbleTextView;
-import com.android.launcher3.DeviceProfile;
 import com.sprd.launcher3.ext.DynamicIconUtils.DynamicAppChangedCallbacks;
 import com.sprd.launcher3.ext.LogUtils;
 
@@ -24,7 +22,6 @@ public abstract class DynamicIcon extends BroadcastReceiver {
     protected Context mContext;
     protected ComponentName mComponent;
     protected int mOffsetY;
-    protected boolean mInitOffsetY = true;
 
     private WeakReference<DynamicAppChangedCallbacks> mCallbacks;
 
@@ -41,15 +38,8 @@ public abstract class DynamicIcon extends BroadcastReceiver {
         init();
     }
 
-    protected int getOffsetY(View icon) {
-        if (mInitOffsetY && (icon instanceof BubbleTextView)) {
-            DeviceProfile grid = ((BubbleTextView)icon).getDeviceProfile();
-            if (grid != null) {
-                mOffsetY = grid.iconSizePx;
-                mInitOffsetY = false;
-            }
-        }
-        return mOffsetY;
+    public void setOffsetY(int offsetY) {
+        mOffsetY = offsetY;
     }
 
     public void setDynamicIconDrawCallback(WeakReference<DynamicAppChangedCallbacks> callbacks) {

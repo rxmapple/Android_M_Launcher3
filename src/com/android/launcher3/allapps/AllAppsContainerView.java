@@ -51,7 +51,7 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.Thunk;
-import com.sprd.launcher3.ext.LogUtils;
+import com.sprd.launcher3.ext.FeatureOption;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
@@ -635,7 +635,7 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
         Selection.setSelection(mSearchQueryBuilder, 0);
     }
 
-    public void updateAppsUnreadChanged(ComponentName componentName, int unreadNum) {
+    public void updateAppsUnreadAndDynamicIconChanged(ComponentName componentName, int unreadNum) {
         List<AlphabeticalAppsList.AdapterItem> mAdapterItems = mApps.getAdapterItems();
         final int size = mAdapterItems.size();
         AlphabeticalAppsList.AdapterItem adapterItem = null;
@@ -643,31 +643,15 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
             adapterItem = mAdapterItems.get(i);
             if (adapterItem.appInfo != null && adapterItem.appInfo.intent != null
                     && adapterItem.appInfo.intent.getComponent().equals(componentName)) {
-                adapterItem.appInfo.unreadNum = unreadNum;
-            }
-        }
-        // Refresh the recycler view
-        if (mAdapter != null) {
-            mAdapter.notifyDataSetChanged();
-        }
-    }
-
-    public void updateAppsDynamicIconChanged(ComponentName componentName) {
-        List<AlphabeticalAppsList.AdapterItem> mAdapterItems = mApps.getAdapterItems();
-        final int size = mAdapterItems.size();
-        AlphabeticalAppsList.AdapterItem adapterItem = null;
-        for (int i = 0; i < size; i++) {
-            adapterItem = mAdapterItems.get(i);
-            if (adapterItem.appInfo != null && adapterItem.appInfo.intent != null
-                    && adapterItem.appInfo.intent.getComponent().equals(componentName)) {
-                if (LogUtils.DEBUG_DYNAMIC_ICON) {
-                    LogUtils.d(TAG, "updateAppsDynamicIconChanged: componentName = " + componentName +
-                            ", mAppsRecyclerView.getVisibility() = " + mAppsRecyclerView.getVisibility());
+                if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
+                    adapterItem.appInfo.unreadNum = unreadNum;
                 }
+
                 // Refresh the recycler view
                 if (mAdapter != null) {
                     mAdapter.notifyItemChanged(i);
                 }
+                break;
             }
         }
     }

@@ -203,7 +203,8 @@ public class ItemInfo {
     public String toString() {
         return "Item(id=" + this.id + " type=" + this.itemType + " container=" + this.container
             + " screen=" + screenId + " cellX=" + cellX + " cellY=" + cellY + " spanX=" + spanX
-            + " spanY=" + spanY + " dropPos=" + Arrays.toString(dropPos) + " unreadNum=" + unreadNum
-            + " dynamicIconDrawCallback=" + dynamicIconDrawCallback + " user=" + user + ")";
+            + " spanY=" + spanY + " dropPos=" + Arrays.toString(dropPos)
+            + " unreadNum=" + unreadNum + " dynamicIconDrawCallback=" + dynamicIconDrawCallback
+            + " user=" + user + ")";
     }
 }

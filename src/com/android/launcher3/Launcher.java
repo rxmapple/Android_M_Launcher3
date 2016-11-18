@@ -440,31 +440,6 @@ public class Launcher extends Activity
         LauncherAppState.setApplicationContext(getApplicationContext());
         LauncherAppState app = LauncherAppState.getInstance();
 
-        if (LogUtils.DEBUG_UNREAD) {
-            LogUtils.d(TAG, "launcher unread support:" + FeatureOption.SPRD_UNREAD_INFO_SUPPORT);
-        }
-
-        if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
-            mUnreadLoaderUtils = UnreadLoaderUtils.getInstance(getApplicationContext());
-
-            // Register unread change broadcast.
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(UnreadLoaderUtils.ACTION_UNREAD_CHANGED);
-            registerReceiver(mUnreadLoaderUtils, filter);
-
-            // initialize unread loader
-            mUnreadLoaderUtils.initialize(this);
-            mUnreadLoaderUtils.loadAndInitUnreadShortcuts();
-        }
-
-        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
-            mDynamicIconUtils = DynamicIconUtils.getInstance(getApplicationContext());
-
-            // initialize dynamic icon
-            mDynamicIconUtils.initialize(this);
-            mDynamicIconUtils.loadAndInitDynamicIcon();
-
-        }
         // Load configuration-specific DeviceProfile
         mDeviceProfile = getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE ?
@@ -501,6 +476,35 @@ public class Launcher extends Activity
         setContentView(R.layout.launcher);
 
         setupViews();
+
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "launcher unread support:" + FeatureOption.SPRD_UNREAD_INFO_SUPPORT);
+        }
+        if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
+            mUnreadLoaderUtils = UnreadLoaderUtils.getInstance(getApplicationContext());
+
+            // Register unread change broadcast.
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(UnreadLoaderUtils.ACTION_UNREAD_CHANGED);
+            registerReceiver(mUnreadLoaderUtils, filter);
+
+            // initialize unread loader
+            mUnreadLoaderUtils.initialize(this);
+            mUnreadLoaderUtils.loadAndInitUnreadShortcuts();
+        }
+
+        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+            LogUtils.d(TAG, "launcher dynamic icon support:" + FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT);
+        }
+        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            mDynamicIconUtils = DynamicIconUtils.getInstance(getApplicationContext());
+
+            // initialize dynamic icon
+            mDynamicIconUtils.initialize(this);
+            mDynamicIconUtils.loadAndInitDynamicIcon();
+
+        }
+
         mDeviceProfile.layout(this);
 
         lockAllApps();
@@ -4799,13 +4803,9 @@ public class Launcher extends Activity
                     LogUtils.d(TAG, "bindComponentUnreadChanged begin: component = " + component
                             + ", unreadNum = " + unreadNum + ", start = " + start);
                 }
-                if (mWorkspace != null) {
-                    mWorkspace.updateComponentUnreadChanged(component, unreadNum);
-                }
 
-                if (mAppsView != null) {
-                    mAppsView.updateAppsUnreadChanged(component, unreadNum);
-                }
+                mUnreadLoaderUtils.bindComponentUnreadChanged(component, unreadNum);
+
                 if (LogUtils.DEBUG_PERFORMANCE) {
                     LogUtils.d(TAG, "bindComponentUnreadChanged end: current time = "
                             + System.currentTimeMillis() + ", time used = "
@@ -4843,9 +4843,9 @@ public class Launcher extends Activity
                 if (LogUtils.DEBUG_PERFORMANCE) {
                     LogUtils.d(TAG, "bindWorkspaceUnreadInfo begin: start = " + start);
                 }
-                if (mWorkspace != null) {
-                    mWorkspace.updateShortcutsAndFoldersUnread();
-                }
+
+                mUnreadLoaderUtils.updateShortcutsAndFoldersUnread();
+
                 if (LogUtils.DEBUG_PERFORMANCE) {
                     LogUtils.d(TAG, "bindWorkspaceUnreadInfo end: current time = "
                             + System.currentTimeMillis() + ",time used = "
@@ -4876,8 +4876,7 @@ public class Launcher extends Activity
             }
         });
     }
-
-/**@}**/
+    /**@}**/
 
     /**SPRD: Added for dynamic icon feature.@{**/
 
@@ -4898,13 +4897,9 @@ public class Launcher extends Activity
                     LogUtils.d(TAG, "bindComponentDynamicIconChanged begin: component = " + component
                             + ", start = " + start);
                 }
-                if (mWorkspace != null) {
-                    mWorkspace.updateComponentDynamicIconChanged(component);
-                }
 
-                if (mAppsView != null && isAppsViewVisible()) {
-                    mAppsView.updateAppsDynamicIconChanged(component);
-                }
+                mDynamicIconUtils.bindComponentDynamicIconChanged(component);
+
                 if (LogUtils.DEBUG_PERFORMANCE) {
                     LogUtils.d(TAG, "bindComponentDynamicIconChanged end: current time = "
                             + System.currentTimeMillis() + ", time used = "
@@ -4941,9 +4936,9 @@ public class Launcher extends Activity
                 if (LogUtils.DEBUG_PERFORMANCE) {
                     LogUtils.d(TAG, "bindWorkspaceDynamicInfo begin: start = " + start);
                 }
-                if (mWorkspace != null) {
-                    mWorkspace.updateShortcutsAndFoldersDynamicIcon();
-                }
+
+                mDynamicIconUtils.updateShortcutsAndFoldersDynamicIcon();
+
                 if (LogUtils.DEBUG_PERFORMANCE) {
                     LogUtils.d(TAG, "bindWorkspaceDynamicInfo end: current time = "
                             + System.currentTimeMillis() + ",time used = "

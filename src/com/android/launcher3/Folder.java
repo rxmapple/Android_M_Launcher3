@@ -1414,82 +1414,11 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
     };
 
     /**
-     * SPRD: Update unread number of the content shortcut.
-     */
-    public void updateContentUnreadNum() {
-        if (LogUtils.DEBUG_UNREAD) {
-            LogUtils.d(TAG, "Folder updateContentUnreadNum: mInfo = " + mInfo);
-        }
-        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
-                getAllShortcutContainersInFolder();
-        int childCount = 0;
-        View view = null;
-        Object tag = null;
-
-        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
-            childCount = layout.getChildCount();
-            for (int j = 0; j < childCount; j++) {
-                view = layout.getChildAt(j);
-                tag = view.getTag();
-                if (LogUtils.DEBUG_UNREAD) {
-                    LogUtils.d(TAG, "updateShortcutsAndFoldersUnread: tag = " + tag + ", j = "
-                            + j + ", view = " + view);
-                }
-                if (tag instanceof ShortcutInfo) {
-                    final ShortcutInfo info = (ShortcutInfo) tag;
-                    if (LogUtils.DEBUG_UNREAD) {
-                        LogUtils.d(TAG, "updateShortcutsAndFoldersUnread:info =" + info.toString());
-                    }
-                    ((BubbleTextView) view).invalidate();
-                }
-            }
-        }
-    }
-
-    /**
-     * SPRD: Update dynamic icon of the content shortcut.
-     */
-    public void updateContentDynamicIcon(ComponentName component) {
-        if (LogUtils.DEBUG_DYNAMIC_ICON) {
-            LogUtils.d(TAG, "Folder updateContentDynamicIcon: mInfo = " + mInfo);
-        }
-        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
-                getAllShortcutContainersInFolder();
-        int childCount = 0;
-        View view = null;
-        Object tag = null;
-
-        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
-            childCount = layout.getChildCount();
-            for (int j = 0; j < childCount; j++) {
-                view = layout.getChildAt(j);
-                tag = view.getTag();
-                if (LogUtils.DEBUG_DYNAMIC_ICON) {
-                    LogUtils.d(TAG, "updateShortcutsAndFoldersUnread: tag = " + tag + ", j = "
-                            + j + ", view = " + view);
-                }
-                if (tag instanceof ShortcutInfo) {
-                    final ShortcutInfo info = (ShortcutInfo) tag;
-                    final Intent intent = info.intent;
-                    final ComponentName componentName = intent.getComponent();
-                    if (LogUtils.DEBUG_DYNAMIC_ICON) {
-                        LogUtils.d(TAG, "updateShortcutsAndFoldersUnread:find component = " + component
-                                + ", ,intent = " + intent + ", componentName = " + componentName);
-                    }
-                    if (componentName != null && componentName.equals(component)) {
-                        ((BubbleTextView) view).invalidate();
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * We should only use this to search for specific children.  Do not use this method to modify
      * ShortcutsAndWidgetsContainer directly. Includes ShortcutAndWidgetContainers from
      * the hotseat and workspace pages
      */
-    private ArrayList<ShortcutAndWidgetContainer> getAllShortcutContainersInFolder() {
+    public ArrayList<ShortcutAndWidgetContainer> getAllShortcutContainersInFolder() {
         ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
                 new ArrayList<ShortcutAndWidgetContainer>();
         int screenCount = mContent.getChildCount();

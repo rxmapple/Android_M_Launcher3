@@ -2,13 +2,23 @@ package com.sprd.launcher3.ext;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.view.View;
 
 import com.android.launcher3.BubbleTextView;
+import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.Folder;
+import com.android.launcher3.FolderIcon;
+import com.android.launcher3.FolderInfo;
 import com.android.launcher3.ItemInfo;
+import com.android.launcher3.Launcher;
+import com.android.launcher3.ShortcutAndWidgetContainer;
+import com.android.launcher3.ShortcutInfo;
+import com.android.launcher3.Workspace;
+import com.android.launcher3.allapps.AllAppsContainerView;
 import com.sprd.launcher3.dynamicIcon.DynamicCalendar;
 import com.sprd.launcher3.dynamicIcon.DynamicDeskclock;
 import com.sprd.launcher3.dynamicIcon.DynamicIcon.DynamicIconDrawCallback;
@@ -31,6 +41,9 @@ public class DynamicIconUtils {
     private static final int INVALID_NUM = -1;
     private static int sDynamicIconInfoNum = 0;
 
+    private Launcher mLauncher;
+    private Workspace mWorkspace;
+    private AllAppsContainerView mAppsView;
     private WeakReference<DynamicAppChangedCallbacks> mCallbacks;
     private Context mContext;
 
@@ -68,11 +81,16 @@ public class DynamicIconUtils {
     /**
      * Set this as the current Launcher activity object for the loader.
      */
-    public void initialize(DynamicAppChangedCallbacks callbacks) {
-        mCallbacks = new WeakReference<>( callbacks );
-        if (LogUtils.DEBUG_DYNAMIC_ICON) {
-            LogUtils.d(TAG, "initialize: callbacks = " + callbacks
-                    + ", mCallbacks = " + mCallbacks);
+    public void initialize(Launcher launcher) {
+        mLauncher = launcher;
+        mWorkspace = launcher.getWorkspace();
+        mAppsView = launcher.getAppsView();
+        if (launcher instanceof DynamicAppChangedCallbacks) {
+            mCallbacks = new WeakReference<>((DynamicAppChangedCallbacks)launcher);
+            if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                LogUtils.d(TAG, "initialize: launcher = " + launcher
+                        + ", mCallbacks = " + mCallbacks);
+            }
         }
     }
 
@@ -164,6 +182,7 @@ public class DynamicIconUtils {
                     new DynamicSupportInfo(calendar.getComponentName(),
                             calendar.getStableBackground(), calendar.getDynamicIconDrawCallback());
             calendar.setDynamicIconDrawCallback(mCallbacks);
+            calendar.setOffsetY(mLauncher.getDeviceProfile().iconSizePx);
             DYNAMIC_SUPPORT_INFOS.add(dynamicCalendar);
         }
 
@@ -173,6 +192,7 @@ public class DynamicIconUtils {
                     new DynamicSupportInfo(deskclock.getComponentName(),
                             deskclock.getStableBackground(), deskclock.getDynamicIconDrawCallback());
             deskclock.setDynamicIconDrawCallback(mCallbacks);
+            deskclock.setOffsetY(mLauncher.getDeviceProfile().iconSizePx);
             DYNAMIC_SUPPORT_INFOS.add(dynamicClock);
         }
 
@@ -181,6 +201,173 @@ public class DynamicIconUtils {
         if (LogUtils.DEBUG_DYNAMIC_ICON) {
             LogUtils.d(TAG, "loadDynamicIconInfo: sDynamicIconInfoNum = " + sDynamicIconInfoNum
                 + ", DYNAMIC_SUPPORT_INFOS = " + DYNAMIC_SUPPORT_INFOS.toString());
+        }
+    }
+
+    public void bindComponentDynamicIconChanged(final ComponentName component) {
+        if (mWorkspace != null) {
+            updateComponentDynamicIconChanged(component);
+        }
+
+        if (mAppsView != null && mLauncher.isAppsViewVisible()) {
+            mAppsView.updateAppsUnreadAndDynamicIconChanged(component, INVALID_NUM);
+        }
+    }
+
+    /**
+     * SPRD: Update dynamic icon of shortcuts and folders in workspace and hotseat
+     * with the given component.
+     * @param component the component name of the app.
+     */
+    public void updateComponentDynamicIconChanged(ComponentName component) {
+        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+            LogUtils.d(TAG, "updateComponentDynamicIconChanged: component = " + component);
+        }
+        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                mWorkspace.getAllShortcutAndWidgetContainers();
+        int childCount = 0;
+        View view = null;
+        Object tag = null;
+        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
+            childCount = layout.getChildCount();
+            for (int j = 0; j < childCount; j++) {
+                view = layout.getChildAt(j);
+
+                if (view != null) {
+                    tag = view.getTag();
+                } else {
+                    if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                        LogUtils.d(TAG, "updateComponentDynamicIconChanged: view is null pointer");
+                    }
+                    continue;
+                }
+                /// SPRD.
+                if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                    LogUtils.d(TAG, "updateComponentDynamicIconChanged: component = " + component
+                            + ",tag = " + tag + ",j = " + j + ",view = " + view);
+                }
+                if (tag instanceof ShortcutInfo) {
+                    final ShortcutInfo info = (ShortcutInfo) tag;
+                    final Intent intent = info.intent;
+                    final ComponentName componentName = intent.getComponent();
+                    if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                        LogUtils.d(TAG, "updateComponentDynamicIconChanged 1: find component = "
+                                + component + ",intent = " + intent + ",componentName = "
+                                + componentName);
+                    }
+                    if (componentName != null && componentName.equals(component)) {
+                        LogUtils.d(TAG, "updateComponentDynamicIconChanged 2: find component = "
+                                + component + ",tag = " + tag + ",j = " + j + ",cellX = "
+                                + info.cellX + ",cellY = " + info.cellY);
+                        ((BubbleTextView) view).invalidate();
+                    }
+                }
+            }
+        }
+
+        /// SPRD: Update shortcut within folder if open folder exists.
+        Folder openFolder = mWorkspace.getOpenFolder();
+        updateContentDynamicIcon(openFolder, component);
+    }
+
+    /**
+     * SPRD: Update dynamic icon of the content shortcut.
+     */
+    private void updateContentDynamicIcon(Folder folder, ComponentName component) {
+        if (folder == null) {
+            return;
+        }
+        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+            LogUtils.d(TAG, "Folder updateContentDynamicIcon: folder.getInfo() = " + folder.getInfo());
+        }
+        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                folder.getAllShortcutContainersInFolder();
+        int childCount = 0;
+        View view = null;
+        Object tag = null;
+
+        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
+            childCount = layout.getChildCount();
+            for (int j = 0; j < childCount; j++) {
+                view = layout.getChildAt(j);
+                tag = view.getTag();
+                if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                    LogUtils.d(TAG, "updateShortcutsAndFoldersUnread: tag = " + tag + ", j = "
+                            + j + ", view = " + view);
+                }
+                if (tag instanceof ShortcutInfo) {
+                    final ShortcutInfo info = (ShortcutInfo) tag;
+                    final Intent intent = info.intent;
+                    final ComponentName componentName = intent.getComponent();
+                    if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                        LogUtils.d(TAG, "updateShortcutsAndFoldersUnread:find component = " + component
+                                + ", ,intent = " + intent + ", componentName = " + componentName);
+                    }
+                    if (componentName != null && componentName.equals(component)) {
+                        ((BubbleTextView) view).invalidate();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * SPRD: Update dynamic icon  of shortcuts in workspace and hotseat.
+     */
+    public void updateShortcutsAndFoldersDynamicIcon() {
+        if (mWorkspace == null) {
+            return;
+        }
+        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+            LogUtils.d(TAG, "updateShortcutsAndFoldersDynamicIcon: this = " + this);
+        }
+        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                mWorkspace.getAllShortcutAndWidgetContainers();
+        int childCount = 0;
+        View view = null;
+        Object tag = null;
+        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
+            childCount = layout.getChildCount();
+            for (int j = 0; j < childCount; j++) {
+                view = layout.getChildAt(j);
+                tag = view.getTag();
+                if (LogUtils.DEBUG_DYNAMIC_ICON) {
+                    LogUtils.d(TAG, "updateShortcutsAndFoldersDynamicIcon: tag = " + tag + ", j = "
+                            + j + ", view = " + view);
+                }
+                if (tag instanceof ShortcutInfo) {
+                    final ShortcutInfo info = (ShortcutInfo) tag;
+                    final Intent intent = info.intent;
+                    final ComponentName componentName = intent.getComponent();
+                    info.dynamicIconDrawCallback = getDIDCForComponent(componentName);
+                    ((BubbleTextView) view).invalidate();
+                } else if (tag instanceof FolderInfo) {
+                    updateFolderDynamicIcon((FolderIcon) view);
+                }
+            }
+        }
+    }
+
+    /**
+     * SPRD: Update dynamic icon of the items in the folder.
+     */
+    private void updateFolderDynamicIcon(FolderIcon folderIcon) {
+        final ArrayList<ShortcutInfo> contents = folderIcon.getFolderInfo().contents;
+        final int contentsCount = contents.size();
+        ShortcutInfo shortcutInfo = null;
+        ComponentName componentName = null;
+        DynamicIconDrawCallback drawCallback = null;
+        for (int i = 0; i < contentsCount; i++) {
+            shortcutInfo = contents.get(i);
+            componentName = shortcutInfo.intent.getComponent();
+            drawCallback = getDIDCForComponent(componentName);
+            if (drawCallback != null) {
+                shortcutInfo.dynamicIconDrawCallback = drawCallback;
+            }
+        }
+        folderIcon.invalidate();
+        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+            LogUtils.d(TAG, "updateFolderDynamicIcon end");
         }
     }
 

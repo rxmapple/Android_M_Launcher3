@@ -214,13 +214,6 @@ public class BubbleTextView extends TextView
         verifyHighRes();
     }
 
-    public DeviceProfile getDeviceProfile() {
-        if (mLauncher != null) {
-            return mLauncher.getDeviceProfile();
-        }
-        return null;
-    }
-
     /**
      * Overrides the default long press timeout.
      */

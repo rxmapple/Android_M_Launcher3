@@ -327,7 +327,7 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         return mFolder;
     }
 
-    FolderInfo getFolderInfo() {
+    public FolderInfo getFolderInfo() {
         return mInfo;
     }
 
@@ -736,7 +736,7 @@ public class FolderIcon extends FrameLayout implements FolderListener {
             LogUtils.d(TAG, "onAdd item = " + item);
         }
         if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
-            updateFolderUnreadNum(item.intent.getComponent(), item.unreadNum);
+            UnreadLoaderUtils.updateFolderUnreadNum(this, item.intent.getComponent(), item.unreadNum);
         }
         invalidate();
         requestLayout();
@@ -747,7 +747,7 @@ public class FolderIcon extends FrameLayout implements FolderListener {
             LogUtils.d(TAG, "onRemove item = " + item);
         }
         if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
-            updateFolderUnreadNum(item.intent.getComponent(), item.unreadNum);
+            UnreadLoaderUtils.updateFolderUnreadNum(this, item.intent.getComponent(), item.unreadNum);
         }
         invalidate();
         requestLayout();
@@ -799,129 +799,5 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         super.cancelLongPress();
 
         mLongPressHelper.cancelLongPress();
-    }
-
-    /**SPRD: Added for unread message feature.@{**/
-
-    /**
-     * SPRD: Update the unread message number of the shortcut with the given value.
-     *
-     * @param unreadNum the number of the unread message.
-     */
-    public void setFolderUnreadNum(int unreadNum) {
-        if (LogUtils.DEBUG_UNREAD) {
-            LogUtils.d(TAG, "setFolderUnreadNum: unreadNum = " + unreadNum + ", mInfo = " + mInfo
-                    + ", this = " + this);
-        }
-
-        if (unreadNum <= 0) {
-            mInfo.unreadNum = 0;
-        } else {
-            mInfo.unreadNum = unreadNum;
-        }
-    }
-
-    /**
-     * SPRD: Update unread number of the folder, the number is the total unread number
-     * of all shortcuts in folder, duplicate shortcut will be only count once.
-     */
-    public void updateFolderUnreadNum() {
-        final ArrayList<ShortcutInfo> contents = mInfo.contents;
-        final int contentsCount = contents.size();
-        int unreadNumTotal = 0;
-        final ArrayList<ComponentName> components = new ArrayList<ComponentName>();
-        ShortcutInfo shortcutInfo = null;
-        ComponentName componentName = null;
-        int unreadNum = 0;
-        for (int i = 0; i < contentsCount; i++) {
-            shortcutInfo = contents.get(i);
-            componentName = shortcutInfo.intent.getComponent();
-            unreadNum = UnreadLoaderUtils.getUnreadNumberOfComponent(componentName);
-            if (unreadNum > 0) {
-                shortcutInfo.unreadNum = unreadNum;
-                int j = 0;
-                for (j = 0; j < components.size(); j++) {
-                    if (componentName != null && componentName.equals(components.get(j))) {
-                        break;
-                    }
-                }
-                if (LogUtils.DEBUG_UNREAD) {
-                    LogUtils.d(TAG, "updateFolderUnreadNum: unreadNumTotal = " + unreadNumTotal
-                            + ", j = " + j + ", components.size() = " + components.size());
-                }
-                if (j >= components.size()) {
-                    components.add(componentName);
-                    unreadNumTotal += unreadNum;
-                }
-            }
-        }
-        if (LogUtils.DEBUG_UNREAD) {
-            LogUtils.d(TAG, "updateFolderUnreadNum 1 end: unreadNumTotal = " + unreadNumTotal);
-        }
-        setFolderUnreadNum(unreadNumTotal);
-    }
-
-    /**
-     * SPRD: Update the unread message of the shortcut with the given information.
-     *
-     * @param unreadNum the number of the unread message.
-     */
-    public void updateFolderUnreadNum(ComponentName component, int unreadNum) {
-        final ArrayList<ShortcutInfo> contents = mInfo.contents;
-        final int contentsCount = contents.size();
-        int unreadNumTotal = 0;
-        ShortcutInfo appInfo = null;
-        ComponentName name = null;
-        final ArrayList<ComponentName> components = new ArrayList<ComponentName>();
-        for (int i = 0; i < contentsCount; i++) {
-            appInfo = contents.get(i);
-            name = appInfo.intent.getComponent();
-            if (name != null && name.equals(component)) {
-                appInfo.unreadNum = unreadNum;
-            }
-            if (appInfo.unreadNum > 0) {
-                int j = 0;
-                for (j = 0; j < components.size(); j++) {
-                    if (name != null && name.equals(components.get(j))) {
-                        break;
-                    }
-                }
-                if (LogUtils.DEBUG_UNREAD) {
-                    LogUtils.d(TAG, "updateFolderUnreadNum: unreadNumTotal = " + unreadNumTotal
-                            + ", j = " + j + ", components.size() = " + components.size());
-                }
-                if (j >= components.size()) {
-                    components.add(name);
-                    unreadNumTotal += appInfo.unreadNum;
-                }
-            }
-        }
-        if (LogUtils.DEBUG_UNREAD) {
-            LogUtils.d(TAG, "updateFolderUnreadNum 2 end: unreadNumTotal = " + unreadNumTotal);
-        }
-        setFolderUnreadNum(unreadNumTotal);
-    }
-    /**@**/
-
-    /**
-     * SPRD: Update dynamic icon of the items in the folder.
-     */
-    public void updateFolderDynamicIcon() {
-        final ArrayList<ShortcutInfo> contents = mInfo.contents;
-        final int contentsCount = contents.size();
-        ShortcutInfo shortcutInfo = null;
-        ComponentName componentName = null;
-        DynamicIconDrawCallback drawCallback = null;
-        for (int i = 0; i < contentsCount; i++) {
-            shortcutInfo = contents.get(i);
-            componentName = shortcutInfo.intent.getComponent();
-            drawCallback = DynamicIconUtils.getDIDCForComponent(componentName);
-            if (drawCallback != null) {
-                shortcutInfo.dynamicIconDrawCallback = drawCallback;
-            }
-            if (LogUtils.DEBUG_UNREAD) {
-                LogUtils.d(TAG, "updateFolderDynamicIcon end");
-            }
-        }
     }
 }

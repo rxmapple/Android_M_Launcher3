@@ -19,11 +19,18 @@ import android.text.TextUtils;
 import android.view.View;
 
 import com.android.launcher3.AppInfo;
+import com.android.launcher3.BubbleTextView;
+import com.android.launcher3.Folder;
+import com.android.launcher3.FolderIcon;
 import com.android.launcher3.FolderInfo;
 import com.android.launcher3.ItemInfo;
+import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
+import com.android.launcher3.ShortcutAndWidgetContainer;
 import com.android.launcher3.ShortcutInfo;
+import com.android.launcher3.Workspace;
+import com.android.launcher3.allapps.AllAppsContainerView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -90,6 +97,9 @@ public class UnreadLoaderUtils extends BroadcastReceiver {
 
     private static UnreadLoaderUtils INSTANCE;
 
+    private Launcher mLauncher;
+    private Workspace mWorkspace;
+    private AllAppsContainerView mAppsView;
     private WeakReference<UnreadCallbacks> mCallbacks;
 
     private UnreadLoaderUtils(Context context) {
@@ -136,11 +146,16 @@ public class UnreadLoaderUtils extends BroadcastReceiver {
     /**
      * Set this as the current Launcher activity object for the loader.
      */
-    public void initialize(UnreadCallbacks callbacks) {
-        mCallbacks = new WeakReference<>( callbacks );
-        if (LogUtils.DEBUG_UNREAD) {
-            LogUtils.d(TAG, "initialize: callbacks = " + callbacks
-                    + ", mCallbacks = " + mCallbacks);
+    public void initialize(Launcher launcher) {
+        mLauncher = launcher;
+        mWorkspace = launcher.getWorkspace();
+        mAppsView = launcher.getAppsView();
+        if (launcher instanceof UnreadCallbacks) {
+            mCallbacks = new WeakReference<>((UnreadCallbacks)launcher);
+            if (LogUtils.DEBUG_UNREAD) {
+                LogUtils.d(TAG, "initialize: launcher = " + launcher
+                        + ", mCallbacks = " + mCallbacks);
+            }
         }
     }
 
@@ -352,6 +367,267 @@ public class UnreadLoaderUtils extends BroadcastReceiver {
         final int index = supportUnreadFeature(component);
         return getUnreadNumberAt(index);
     }
+
+    public void bindComponentUnreadChanged(final ComponentName component, final int unreadNum) {
+        if (mWorkspace != null) {
+            updateComponentUnreadChanged(component, unreadNum);
+        }
+
+        if (mAppsView != null) {
+            mAppsView.updateAppsUnreadAndDynamicIconChanged(component, unreadNum);
+        }
+    }
+
+    /**
+     * SPRD: Update unread number of shortcuts and folders in workspace and hotseat
+     * with the given component.
+     *
+     * @param component app component
+     * @param unreadNum app unreadNum
+     */
+    public void updateComponentUnreadChanged(ComponentName component, int unreadNum) {
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "updateComponentUnreadChanged: component = " + component
+                    + ", unreadNum = " + unreadNum);
+        }
+        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                mWorkspace.getAllShortcutAndWidgetContainers();
+        int childCount = 0;
+        View view = null;
+        Object tag = null;
+        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
+            childCount = layout.getChildCount();
+            for (int j = 0; j < childCount; j++) {
+                view = layout.getChildAt(j);
+
+                if (view != null) {
+                    tag = view.getTag();
+                } else {
+                    if (LogUtils.DEBUG_UNREAD) {
+                        LogUtils.d(TAG, "updateComponentUnreadChanged: view is null pointer");
+                    }
+                    continue;
+                }
+                /// SPRD.
+                if (LogUtils.DEBUG_UNREAD) {
+                    LogUtils.d(TAG, "updateComponentUnreadChanged: component = " + component
+                            + ",tag = " + tag + ",j = " + j + ",view = " + view);
+                }
+                if (tag instanceof ShortcutInfo) {
+                    final ShortcutInfo info = (ShortcutInfo) tag;
+                    final Intent intent = info.intent;
+                    final ComponentName componentName = intent.getComponent();
+                    if (LogUtils.DEBUG_UNREAD) {
+                        LogUtils.d(TAG, "updateComponentUnreadChanged 2: find component = "
+                                + component + ",intent = " + intent + ",componentName = "
+                                + componentName);
+                    }
+                    if (componentName != null && componentName.equals(component)) {
+                        LogUtils.d(TAG, "updateComponentUnreadChanged 1: find component = "
+                                + component + ",tag = " + tag + ",j = " + j + ",cellX = "
+                                + info.cellX + ",cellY = " + info.cellY);
+                        info.unreadNum = unreadNum;
+                        ((BubbleTextView) view).invalidate();
+                    }
+                } else if (tag instanceof FolderInfo) {
+                    updateFolderUnreadNum(((FolderIcon) view), component, unreadNum);
+                }
+            }
+        }
+
+        /// SPRD: Update shortcut within folder if open folder exists.
+        Folder openFolder = mWorkspace.getOpenFolder();
+        updateContentUnreadNum(openFolder);
+    }
+
+    /**
+     * SPRD: Update the unread message of the shortcut with the given information.
+     *
+     * @param unreadNum the number of the unread message.
+     */
+    public static void updateFolderUnreadNum(FolderIcon folderIcon, ComponentName component, int unreadNum) {
+        if (folderIcon == null) {
+            return;
+        }
+        final ArrayList<ShortcutInfo> contents = folderIcon.getFolderInfo().contents;
+        final int contentsCount = contents.size();
+        int unreadNumTotal = 0;
+        ShortcutInfo appInfo = null;
+        ComponentName name = null;
+        final ArrayList<ComponentName> components = new ArrayList<ComponentName>();
+        for (int i = 0; i < contentsCount; i++) {
+            appInfo = contents.get(i);
+            name = appInfo.intent.getComponent();
+            if (name != null && name.equals(component)) {
+                appInfo.unreadNum = unreadNum;
+            }
+            if (appInfo.unreadNum > 0) {
+                int j = 0;
+                for (j = 0; j < components.size(); j++) {
+                    if (name != null && name.equals(components.get(j))) {
+                        break;
+                    }
+                }
+                if (LogUtils.DEBUG_UNREAD) {
+                    LogUtils.d(TAG, "updateFolderUnreadNum: unreadNumTotal = " + unreadNumTotal
+                            + ", j = " + j + ", components.size() = " + components.size());
+                }
+                if (j >= components.size()) {
+                    components.add(name);
+                    unreadNumTotal += appInfo.unreadNum;
+                }
+            }
+        }
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "updateFolderUnreadNum 2 end: unreadNumTotal = " + unreadNumTotal);
+        }
+        setFolderUnreadNum(folderIcon, unreadNumTotal);
+        folderIcon.invalidate();
+    }
+
+    /**SPRD: Added for unread message feature.@{**/
+
+    /**
+     * SPRD: Update the unread message number of the shortcut with the given value.
+     *
+     * @param unreadNum the number of the unread message.
+     */
+    public static void setFolderUnreadNum(FolderIcon folderIcon, int unreadNum) {
+        if (folderIcon == null) {
+            return;
+        }
+
+        FolderInfo info = folderIcon.getFolderInfo();
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "setFolderUnreadNum: unreadNum = " + unreadNum + ", info = " + info);
+        }
+
+        if (unreadNum <= 0) {
+            info.unreadNum = 0;
+        } else {
+            info.unreadNum = unreadNum;
+        }
+    }
+
+    /**
+     * SPRD: Update unread number of the content shortcut.
+     */
+    public void updateContentUnreadNum(Folder folder) {
+        if (folder == null) {
+            return;
+        }
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "Folder updateContentUnreadNum: folder.getInfo() = " + folder.getInfo());
+        }
+        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                folder.getAllShortcutContainersInFolder();
+        int childCount = 0;
+        View view = null;
+        Object tag = null;
+
+        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
+            childCount = layout.getChildCount();
+            for (int j = 0; j < childCount; j++) {
+                view = layout.getChildAt(j);
+                tag = view.getTag();
+                if (LogUtils.DEBUG_UNREAD) {
+                    LogUtils.d(TAG, "updateShortcutsAndFoldersUnread: tag = " + tag + ", j = "
+                            + j + ", view = " + view);
+                }
+                if (tag instanceof ShortcutInfo) {
+                    final ShortcutInfo info = (ShortcutInfo) tag;
+                    if (LogUtils.DEBUG_UNREAD) {
+                        LogUtils.d(TAG, "updateShortcutsAndFoldersUnread:info =" + info.toString());
+                    }
+                    ((BubbleTextView) view).invalidate();
+                }
+            }
+        }
+    }
+
+    /**SPRD: Added for unread message feature.@{**/
+    /**
+     * SPRD: Update unread number of shortcuts and folders in workspace and hotseat.
+     */
+    public void updateShortcutsAndFoldersUnread() {
+        if (mWorkspace == null) {
+            return;
+        }
+
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "updateShortcutsAndFolderUnread: this = " + this);
+        }
+        final ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
+                mWorkspace.getAllShortcutAndWidgetContainers();
+        int childCount = 0;
+        View view = null;
+        Object tag = null;
+        for (ShortcutAndWidgetContainer layout : childrenLayouts) {
+            childCount = layout.getChildCount();
+            for (int j = 0; j < childCount; j++) {
+                view = layout.getChildAt(j);
+                tag = view.getTag();
+                if (LogUtils.DEBUG_UNREAD) {
+                    LogUtils.d(TAG, "updateShortcutsAndFoldersUnread: tag = " + tag + ", j = "
+                            + j + ", view = " + view);
+                }
+                if (tag instanceof ShortcutInfo) {
+                    final ShortcutInfo info = (ShortcutInfo) tag;
+                    final Intent intent = info.intent;
+                    final ComponentName componentName = intent.getComponent();
+                    info.unreadNum = getUnreadNumberOfComponent(componentName);
+                    ((BubbleTextView) view).invalidate();
+                } else if (tag instanceof FolderInfo) {
+                    updateFolderUnreadNum((FolderIcon) view);
+                    ((FolderIcon) view).invalidate();
+                }
+            }
+        }
+    }
+
+    /**
+     * SPRD: Update unread number of the folder, the number is the total unread number
+     * of all shortcuts in folder, duplicate shortcut will be only count once.
+     */
+    public void updateFolderUnreadNum(FolderIcon folderIcon) {
+        if (folderIcon == null) {
+            return;
+        }
+        final ArrayList<ShortcutInfo> contents = folderIcon.getFolderInfo().contents;
+        final int contentsCount = contents.size();
+        int unreadNumTotal = 0;
+        final ArrayList<ComponentName> components = new ArrayList<ComponentName>();
+        ShortcutInfo shortcutInfo = null;
+        ComponentName componentName = null;
+        int unreadNum = 0;
+        for (int i = 0; i < contentsCount; i++) {
+            shortcutInfo = contents.get(i);
+            componentName = shortcutInfo.intent.getComponent();
+            unreadNum = getUnreadNumberOfComponent(componentName);
+            if (unreadNum > 0) {
+                shortcutInfo.unreadNum = unreadNum;
+                int j = 0;
+                for (j = 0; j < components.size(); j++) {
+                    if (componentName != null && componentName.equals(components.get(j))) {
+                        break;
+                    }
+                }
+                if (LogUtils.DEBUG_UNREAD) {
+                    LogUtils.d(TAG, "updateFolderUnreadNum: unreadNumTotal = " + unreadNumTotal
+                            + ", j = " + j + ", components.size() = " + components.size());
+                }
+                if (j >= components.size()) {
+                    components.add(componentName);
+                    unreadNumTotal += unreadNum;
+                }
+            }
+        }
+        if (LogUtils.DEBUG_UNREAD) {
+            LogUtils.d(TAG, "updateFolderUnreadNum 1 end: unreadNumTotal = " + unreadNumTotal);
+        }
+        setFolderUnreadNum(folderIcon, unreadNumTotal);
+    }
+
 
     /**
      * Draw unread number for the given icon.

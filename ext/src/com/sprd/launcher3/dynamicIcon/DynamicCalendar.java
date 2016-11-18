@@ -107,9 +107,8 @@ public class DynamicCalendar extends DynamicIcon {
             iconCenterX = canvas.getWidth() / 2;
             iconCenterY = canvas.getHeight() / 2;
         } else {
-            int offsetY = getOffsetY(icon);
             iconCenterX = icon.getScrollX() + (icon.getWidth() / 2);
-            iconCenterY = icon.getScrollY() + icon.getPaddingTop()  + (offsetY / 2);
+            iconCenterY = icon.getScrollY() + icon.getPaddingTop()  + (mOffsetY / 2);
         }
 
         canvas.save();
