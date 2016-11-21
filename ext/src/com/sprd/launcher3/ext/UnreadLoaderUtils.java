@@ -430,7 +430,8 @@ public class UnreadLoaderUtils extends BroadcastReceiver {
                         ((BubbleTextView) view).invalidate();
                     }
                 } else if (tag instanceof FolderInfo) {
-                    updateFolderUnreadNum(((FolderIcon) view), component, unreadNum);
+                    updateFolderUnreadNum((FolderIcon) view, component, unreadNum);
+                    ((FolderIcon) view).invalidate();
                 }
             }
         }
@@ -482,10 +483,7 @@ public class UnreadLoaderUtils extends BroadcastReceiver {
             LogUtils.d(TAG, "updateFolderUnreadNum 2 end: unreadNumTotal = " + unreadNumTotal);
         }
         setFolderUnreadNum(folderIcon, unreadNumTotal);
-        folderIcon.invalidate();
     }
-
-    /**SPRD: Added for unread message feature.@{**/
 
     /**
      * SPRD: Update the unread message number of the shortcut with the given value.
@@ -545,7 +543,6 @@ public class UnreadLoaderUtils extends BroadcastReceiver {
         }
     }
 
-    /**SPRD: Added for unread message feature.@{**/
     /**
      * SPRD: Update unread number of shortcuts and folders in workspace and hotseat.
      */
