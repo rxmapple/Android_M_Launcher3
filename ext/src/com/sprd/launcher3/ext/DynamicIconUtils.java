@@ -9,7 +9,6 @@ import android.os.AsyncTask;
 import android.view.View;
 
 import com.android.launcher3.BubbleTextView;
-import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Folder;
 import com.android.launcher3.FolderIcon;
 import com.android.launcher3.FolderInfo;
@@ -182,7 +181,6 @@ public class DynamicIconUtils {
                     new DynamicSupportInfo(calendar.getComponentName(),
                             calendar.getStableBackground(), calendar.getDynamicIconDrawCallback());
             calendar.setDynamicIconDrawCallback(mCallbacks);
-            calendar.setOffsetY(mLauncher.getDeviceProfile().iconSizePx);
             DYNAMIC_SUPPORT_INFOS.add(dynamicCalendar);
         }
 
@@ -192,7 +190,6 @@ public class DynamicIconUtils {
                     new DynamicSupportInfo(deskclock.getComponentName(),
                             deskclock.getStableBackground(), deskclock.getDynamicIconDrawCallback());
             deskclock.setDynamicIconDrawCallback(mCallbacks);
-            deskclock.setOffsetY(mLauncher.getDeviceProfile().iconSizePx);
             DYNAMIC_SUPPORT_INFOS.add(dynamicClock);
         }
 
@@ -376,15 +373,15 @@ public class DynamicIconUtils {
      * @param canvas the canvas to draw the dynamic icon.
      * @param icon the view on which to draw the dynamic icon.
      * @param scale the scale of the dynamic icon.
-     * @param createBitmap whether need create a bitmap or not.
+     * @param center the center of the dynamic icon.
      */
-    public static void drawDynamicIconIfNeed(Canvas canvas, View icon, float scale, boolean createBitmap) {
+    public static void drawDynamicIconIfNeed(Canvas canvas, View icon, float scale, int[] center) {
         if (icon instanceof BubbleTextView) {
             ItemInfo info = (ItemInfo) icon.getTag();
             if (info != null) {
                 DynamicIconDrawCallback callback = info.dynamicIconDrawCallback;
                 if (callback != null) {
-                    callback.drawDynamicIcon(canvas, icon, scale, createBitmap);
+                    callback.drawDynamicIcon(canvas, icon, scale, center);
                 }
             }
         }

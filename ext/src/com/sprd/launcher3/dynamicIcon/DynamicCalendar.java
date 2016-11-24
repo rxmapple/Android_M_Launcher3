@@ -12,6 +12,7 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 
+import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.R;
 
 import java.text.SimpleDateFormat;
@@ -27,18 +28,20 @@ public class DynamicCalendar extends DynamicIcon {
 
     private static final ComponentName sCalendarComponentName = new ComponentName("com.android.calendar",
             "com.android.calendar.AllInOneActivity");
+    // The proportion of the date font occupied in the dynamic calendar icon.
+    private static final float DATE_SIZE_FACTOR = 0.6f;
+    // The proportion of the week font occupied in the dynamic calendar icon.
+    private static final float WEEK_SIZE_FACTOR = 0.18f;
 
     private String mLastDate = "";
     private Paint mDatePaint;
     private Paint mWeekPaint;
-    private float mDateSize;
-    private float mWeekSize;
     private Drawable mCalendarBackground;
 
     private DynamicIconDrawCallback mCalendarCallback = new DynamicIconDrawCallback() {
         @Override
-        public void drawDynamicIcon(Canvas canvas, View icon, float scale, boolean createBitmap) {
-            draw(canvas, icon, scale, createBitmap);
+        public void drawDynamicIcon(Canvas canvas, View icon, float scale, int[] center) {
+            draw(canvas, icon, scale, center);
         }
     };
 
@@ -55,13 +58,11 @@ public class DynamicCalendar extends DynamicIcon {
         mDatePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mDatePaint.setTypeface(font);
         mDatePaint.setTextAlign(Paint.Align.CENTER);
-        mDateSize = res.getDimensionPixelSize(R.dimen.dynamic_calendar_date_size);
 
         mWeekPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mWeekPaint.setTextAlign(Paint.Align.CENTER);
         mWeekPaint.setTypeface(font);
         mWeekPaint.setColor(0Xffff0000);
-        mWeekSize = res.getDimensionPixelSize(R.dimen.dynamic_calendar_week_size);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_DATE_CHANGED);
@@ -92,28 +93,27 @@ public class DynamicCalendar extends DynamicIcon {
         return mCalendarCallback;
     }
 
-    private void draw(Canvas canvas, View icon, float scale, boolean createBitmap) {
+    private void draw(Canvas canvas, View icon, float scale, int[] center) {
+        if (canvas == null || center == null || !(icon instanceof BubbleTextView)) {
+            return;
+        }
+
         String day = getTodayDate();
         String dayOfWeek = getTodayWeek();
 
-        mDatePaint.setTextSize(mDateSize*scale);
-        mWeekPaint.setTextSize(mWeekSize*scale);
+        int iconSize = ((BubbleTextView) icon).getIconSize();
+        float dateSize = iconSize * DATE_SIZE_FACTOR;
+        float weekSize = iconSize * WEEK_SIZE_FACTOR;
+        mDatePaint.setTextSize(scale * dateSize);
+        mWeekPaint.setTextSize(scale * weekSize);
 
         Paint.FontMetrics fm = mDatePaint.getFontMetrics();
-
-        int iconCenterX;
-        int iconCenterY;
-        if (createBitmap) {
-            iconCenterX = canvas.getWidth() / 2;
-            iconCenterY = canvas.getHeight() / 2;
-        } else {
-            iconCenterX = icon.getScrollX() + (icon.getWidth() / 2);
-            iconCenterY = icon.getScrollY() + icon.getPaddingTop()  + (mOffsetY / 2);
-        }
+        float dateHeight = -fm.ascent;
+        float dateBaseline = (float)(center[1] - fm.ascent * 0.58);
 
         canvas.save();
-        canvas.drawText(dayOfWeek, iconCenterX, (float)(iconCenterY - fm.descent*1.4), mWeekPaint);
-        canvas.drawText(day, iconCenterX, (float)(iconCenterY - fm.ascent*0.55), mDatePaint);
+        canvas.drawText(dayOfWeek, center[0], dateBaseline - dateHeight, mWeekPaint);
+        canvas.drawText(day, center[0], dateBaseline, mDatePaint);
         canvas.restore();
     }
 

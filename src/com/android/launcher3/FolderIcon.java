@@ -20,7 +20,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.animation.ValueAnimator.AnimatorUpdateListener;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
@@ -45,7 +44,6 @@ import android.widget.TextView;
 import com.android.launcher3.DropTarget.DragObject;
 import com.android.launcher3.FolderInfo.FolderListener;
 import com.android.launcher3.util.Thunk;
-import com.sprd.launcher3.dynamicIcon.DynamicIcon.DynamicIconDrawCallback;
 import com.sprd.launcher3.ext.DynamicIconUtils;
 import com.sprd.launcher3.ext.FeatureOption;
 import com.sprd.launcher3.ext.LogUtils;
@@ -614,14 +612,18 @@ public class FolderIcon extends FrameLayout implements FolderListener {
             d.setBounds(mOldBounds);
         }
         canvas.restore();
-        drawDynamicPartOfIcon(canvas, params.scale, textView);
+        drawDynamicPartOfIcon(canvas, params, textView);
     }
 
-    private void drawDynamicPartOfIcon(Canvas canvas, float scale, TextView textView) {
+    private void drawDynamicPartOfIcon(Canvas canvas, PreviewItemDrawingParams params, TextView textView) {
         if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
             canvas.save();
-            canvas.translate(0, (mMaxPerspectiveShift - getPaddingTop()) / 2);
-            DynamicIconUtils.drawDynamicIconIfNeed(canvas, textView, scale, true);
+            int[] center = new int[2];
+            float offsetX = params.transX + mPreviewOffsetX + (params.scale * mIntrinsicIconSize) / 2;
+            float offsetY = params.transY + mPreviewOffsetY + (params.scale * mIntrinsicIconSize) / 2;
+            center[0] = (int) Math.round(offsetX);
+            center[1] = (int) Math.round(offsetY);
+            DynamicIconUtils.drawDynamicIconIfNeed(canvas, textView, params.scale, center);
             canvas.restore();
         }
     }

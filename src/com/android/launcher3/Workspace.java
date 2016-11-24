@@ -28,7 +28,6 @@ import android.appwidget.AppWidgetHostView;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -76,8 +75,6 @@ import com.android.launcher3.widget.PendingAddShortcutInfo;
 import com.android.launcher3.widget.PendingAddWidgetInfo;
 import com.sprd.launcher3.ext.DynamicIconUtils;
 import com.sprd.launcher3.ext.FeatureOption;
-import com.sprd.launcher3.ext.LogUtils;
-import com.sprd.launcher3.ext.UnreadLoaderUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -2139,11 +2136,6 @@ public class Workspace extends PagedView
             clipRect.set(0, 0, bounds.width() + padding, bounds.height() + padding);
             destCanvas.translate(padding / 2 - bounds.left, padding / 2 - bounds.top);
             d.draw(destCanvas);
-
-            //SPRD: Add for dynamic icon feature
-            if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
-                DynamicIconUtils.drawDynamicIconIfNeed(destCanvas, v, DynamicIconUtils.STABLE_SCALE, true);
-            }
         } else {
             if (v instanceof FolderIcon) {
                 // For FolderIcons the text can bleed into the icon area, and so we need to
@@ -2188,6 +2180,17 @@ public class Workspace extends PagedView
 
         mCanvas.setBitmap(b);
         drawDragView(v, mCanvas, padding);
+        //SPRD: Add for dynamic icon feature
+        if (FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+            if (v instanceof TextView) {
+                mCanvas.save();
+                int[] center = new int[2];
+                center[0] = b.getWidth() / 2;
+                center[1] = b.getHeight() / 2;
+                DynamicIconUtils.drawDynamicIconIfNeed(mCanvas, v, DynamicIconUtils.STABLE_SCALE, center);
+                mCanvas.restore();
+            }
+        }
         mCanvas.setBitmap(null);
 
         return b;

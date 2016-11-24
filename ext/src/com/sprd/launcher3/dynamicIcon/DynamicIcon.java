@@ -30,16 +30,12 @@ public abstract class DynamicIcon extends BroadcastReceiver {
     public abstract DynamicIconDrawCallback getDynamicIconDrawCallback();
 
     public class DynamicIconDrawCallback {
-        public void drawDynamicIcon(Canvas canvas, View icon, float scale, boolean createBitmap) {}
+        public void drawDynamicIcon(Canvas canvas, View icon, float scale, int[] center) {}
     }
 
     public DynamicIcon(Context context) {
         mContext = context;
         init();
-    }
-
-    public void setOffsetY(int offsetY) {
-        mOffsetY = offsetY;
     }
 
     public void setDynamicIconDrawCallback(WeakReference<DynamicAppChangedCallbacks> callbacks) {

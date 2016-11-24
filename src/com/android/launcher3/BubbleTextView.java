@@ -30,6 +30,7 @@ import android.graphics.Region;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -660,6 +661,14 @@ public class BubbleTextView extends TextView
             return;
         }
 
-        DynamicIconUtils.drawDynamicIconIfNeed(canvas, this, DynamicIconUtils.STABLE_SCALE, false);
+        int[] center = new int[2];
+        DeviceProfile grid = mLauncher.getDeviceProfile();
+        center[0] = getScrollX() + (getWidth() / 2);
+        center[1] = getScrollY() + getPaddingTop() + (grid.iconSizePx / 2);
+        DynamicIconUtils.drawDynamicIconIfNeed(canvas, this, DynamicIconUtils.STABLE_SCALE, center);
+    }
+
+    public int getIconSize() {
+        return mIconSize;
     }
 }

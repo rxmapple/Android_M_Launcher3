@@ -14,6 +14,7 @@ import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 
+import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.R;
 
 import java.util.Calendar;
@@ -27,6 +28,12 @@ public class DynamicDeskclock extends DynamicIcon {
 
     private static final ComponentName sDeskClockComponentName = new ComponentName("com.android.deskclock",
             "com.android.deskclock.DeskClock");
+    // Fraction of the length of second hand.
+    private static final float SECOND_LENGTH_FACTOR = 0.4f;
+    // Fraction of the length of minute hand.
+    private static final float MINUTE_LENGTH_FACTOR = 0.32f;
+    // Fraction of the length of hour hand.
+    private static final float HOUR_LENGTH_FACTOR = 0.23f;
 
     private Paint mSecondPaint;
     private Paint mMinutePaint;
@@ -34,9 +41,6 @@ public class DynamicDeskclock extends DynamicIcon {
     private int mSecondWidth;
     private int mMinuteWidth;
     private int mHourWidth;
-    private int mSecondLenght;
-    private int mMinuteLenght;
-    private int mHourLenght;
     private int mCenterRadius;
 
     private int mLastHour;
@@ -47,8 +51,8 @@ public class DynamicDeskclock extends DynamicIcon {
 
     private DynamicIconDrawCallback mClockCallback = new DynamicIconDrawCallback() {
         @Override
-        public void drawDynamicIcon(Canvas canvas, View icon, float scale, boolean createBitmap) {
-            draw(canvas, icon, scale, createBitmap);
+        public void drawDynamicIcon(Canvas canvas, View icon, float scale, int[] center) {
+            draw(canvas, icon, scale, center);
         }
     };
 
@@ -65,17 +69,14 @@ public class DynamicDeskclock extends DynamicIcon {
         mSecondPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mSecondPaint.setColor(res.getColor(R.color.dynamic_clock_second_hand));
         mSecondWidth = res.getDimensionPixelSize(R.dimen.dynamic_clock_second_width);
-        mSecondLenght = res.getDimensionPixelSize(R.dimen.dynamic_clock_second_length);
 
         mMinutePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mMinutePaint.setColor(res.getColor(R.color.dynamic_clock_minute_hand));
         mMinuteWidth = res.getDimensionPixelSize(R.dimen.dynamic_clock_minute_width);
-        mMinuteLenght = res.getDimensionPixelSize(R.dimen.dynamic_clock_minute_length);
 
         mHourPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mHourPaint.setColor(res.getColor(R.color.dynamic_clock_hour_hand));
         mHourWidth = res.getDimensionPixelOffset(R.dimen.dynamic_clock_hour_width);
-        mHourLenght = res.getDimensionPixelSize(R.dimen.dynamic_clock_hour_length);
 
         HandlerThread secondThread =  new HandlerThread("sec-thread");
         secondThread.start();
@@ -129,7 +130,16 @@ public class DynamicDeskclock extends DynamicIcon {
         return mClockCallback;
     }
 
-    private void draw(Canvas canvas, View icon, float scale, boolean createBitmap) {
+    private void draw(Canvas canvas, View icon, float scale, int[] center) {
+        if (canvas == null || center == null || !(icon instanceof BubbleTextView)) {
+            return;
+        }
+
+        int iconSize = ((BubbleTextView) icon).getIconSize();
+        float secondLength = iconSize * SECOND_LENGTH_FACTOR;
+        float minuteLength = iconSize * MINUTE_LENGTH_FACTOR;
+        float hourLength = iconSize * HOUR_LENGTH_FACTOR;
+
         scale = Math.abs(scale);
         mSecondPaint.setStrokeWidth(mSecondWidth * scale);
         mMinutePaint.setStrokeWidth(mMinuteWidth * scale);
@@ -155,29 +165,20 @@ public class DynamicDeskclock extends DynamicIcon {
         double radianMinute = (Minutes / 60.0f * 360f)/180f * Math.PI;
         double radianHour = (Hour / 12.0f * 360f)/180f * Math.PI;
 
-        float secondX = (float) (scale * mSecondLenght * Math.sin(radianSecond));
-        float secondY = (float) (scale * mSecondLenght * Math.cos(radianSecond));
+        float secondX = (float) (scale * secondLength * Math.sin(radianSecond));
+        float secondY = (float) (scale * secondLength * Math.cos(radianSecond));
 
-        float minuteX = (float) (scale * mMinuteLenght * Math.sin(radianMinute));
-        float minuteY = (float) (scale * mMinuteLenght * Math.cos(radianMinute));
+        float minuteX = (float) (scale * minuteLength * Math.sin(radianMinute));
+        float minuteY = (float) (scale * minuteLength * Math.cos(radianMinute));
 
-        float hourX = (float) (scale * mHourLenght * Math.sin(radianHour));
-        float hourY = (float) (scale * mHourLenght * Math.cos(radianHour));
+        float hourX = (float) (scale * hourLength * Math.sin(radianHour));
+        float hourY = (float) (scale * hourLength * Math.cos(radianHour));
 
-        float iconCenterX;
-        float iconCenterY;
-        if (createBitmap) {
-            iconCenterX = canvas.getWidth()/2;
-            iconCenterY = canvas.getHeight()/2;
-        } else {
-            iconCenterX = icon.getScrollX() + (icon.getWidth() / 2);
-            iconCenterY = icon.getScrollY() + icon.getPaddingTop()  + (mOffsetY / 2);
-        }
         canvas.save();
-        canvas.drawCircle(iconCenterX, iconCenterY, scale * mCenterRadius, mSecondPaint);
-        canvas.drawLine(iconCenterX, iconCenterY, iconCenterX + hourX, iconCenterY - hourY, mHourPaint);
-        canvas.drawLine(iconCenterX, iconCenterY, iconCenterX + minuteX, iconCenterY - minuteY, mMinutePaint);
-        canvas.drawLine(iconCenterX, iconCenterY, iconCenterX + secondX, iconCenterY - secondY, mSecondPaint);
+        canvas.drawCircle(center[0], center[1], scale * mCenterRadius, mSecondPaint);
+        canvas.drawLine(center[0], center[1], center[0] + hourX, center[1] - hourY, mHourPaint);
+        canvas.drawLine(center[0], center[1], center[0] + minuteX, center[1] - minuteY, mMinutePaint);
+        canvas.drawLine(center[0], center[1], center[0] + secondX, center[1] - secondY, mSecondPaint);
         canvas.restore();
     }
 }
