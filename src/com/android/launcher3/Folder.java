@@ -23,9 +23,7 @@ import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.graphics.PointF;
@@ -61,7 +59,6 @@ import com.android.launcher3.Workspace.ItemOperator;
 import com.android.launcher3.accessibility.LauncherAccessibilityDelegate.AccessibilityDragSource;
 import com.android.launcher3.util.Thunk;
 import com.android.launcher3.util.UiThreadCircularReveal;
-import com.sprd.launcher3.ext.LogUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;

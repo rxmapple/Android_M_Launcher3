@@ -245,8 +245,8 @@ public class ShortcutInfo extends ItemInfo {
         return "ShortcutInfo(title=" + title + "intent=" + intent + "id=" + this.id
                 + " type=" + this.itemType + " container=" + this.container + " screen=" + screenId
                 + " cellX=" + cellX + " cellY=" + cellY + " spanX=" + spanX + " spanY=" + spanY
-                + " dropPos=" + Arrays.toString(dropPos) + " unreadNum= " + unreadNum
-                + " user=" + user + ")";
+                + " unreadNum= " + unreadNum + " dynamicIconDrawCallback=" + dynamicIconDrawCallback
+                + " dropPos=" + Arrays.toString(dropPos) + " user=" + user + ")";
     }
 
     public static void dumpShortcutInfoList(String tag, String label,

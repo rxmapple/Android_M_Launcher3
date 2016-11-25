@@ -34,7 +34,6 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-
 import com.android.launcher3.AppInfo;
 import com.android.launcher3.BaseContainerView;
 import com.android.launcher3.CellLayout;
@@ -132,8 +131,6 @@ final class SimpleSectionMergeAlgorithm implements AlphabeticalAppsList.MergeAlg
 public class AllAppsContainerView extends BaseContainerView implements DragSource,
         LauncherTransitionable, View.OnTouchListener, View.OnLongClickListener,
         AllAppsSearchBarController.Callbacks {
-
-    private static final String TAG = "AllAppsContainerView";
 
     private static final int MIN_ROWS_IN_MERGED_SECTION_PHONE = 3;
     private static final int MAX_NUM_MERGES_PHONE = 2;
