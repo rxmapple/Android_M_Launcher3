@@ -63,6 +63,11 @@
     <uses-permission android:name="com.android.launcher3.permission.RECEIVE_LAUNCH_BROADCASTS" />
     <uses-permission android:name="com.android.launcher3.permission.RECEIVE_FIRST_LOAD_BROADCAST" />
 
+    <!-- SPRD Add for unreadNotifier Function  start-->
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <!-- SPRD Add for unreadNotifier Function  end-->
+
     <application
         android:allowBackup="@bool/enable_backup"
         android:backupAgent="com.android.launcher3.LauncherBackupAgentHelper"
@@ -83,6 +88,7 @@
             android:screenOrientation="nosensor"
             android:resumeWhilePausing="true"
             android:taskAffinity=""
+            android:configChanges="mcc|mnc"
             android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -183,6 +189,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- SPRD Add for unreadNotifier Function  start-->
+        <activity android:name="com.sprd.launcher3.ext.unreadnotifier.UnreadActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
+            android:label="@string/title_text">
+
+            <intent-filter>
+                <action android:name="com.sprd.ACTION_UNREAD_ACTIVITY" />
+            </intent-filter>
+        </activity>
+        <!-- SPRD Add for unreadNotifier Function  end-->
 
         <service android:name="com.android.launcher3.MemoryTracker"
             android:enabled="@bool/debug_memory_enabled"

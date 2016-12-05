@@ -116,6 +116,7 @@ import com.sprd.launcher3.ext.LogUtils;
 import com.sprd.launcher3.ext.SprdSettingsActivity;
 //end }
 import com.sprd.launcher3.ext.UnreadLoaderUtils;
+import com.sprd.launcher3.ext.unreadnotifier.UnreadInfoManager;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -442,7 +443,7 @@ public class Launcher extends Activity
         }
 
         if (FeatureOption.SPRD_UNREAD_INFO_SUPPORT) {
-            mUnreadLoaderUtils = UnreadLoaderUtils.getInstance(getApplicationContext());
+            mUnreadLoaderUtils = UnreadLoaderUtils.getInstance(this);
 
             // Register unread change broadcast.
             IntentFilter filter = new IntentFilter();
@@ -451,7 +452,6 @@ public class Launcher extends Activity
 
             // initialize unread loader
             mUnreadLoaderUtils.initialize(this);
-            mUnreadLoaderUtils.loadAndInitUnreadShortcuts();
         }
 
         // Load configuration-specific DeviceProfile
@@ -904,6 +904,9 @@ public class Launcher extends Activity
     /** @Override for MNC */
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
             int[] grantResults) {
+        UnreadInfoManager.getInstance(this).handleRequestPermissionResult(requestCode,
+                permissions, grantResults);
+
         if (mLauncherCallbacks != null) {
             mLauncherCallbacks.onRequestPermissionsResult(requestCode, permissions,
                     grantResults);

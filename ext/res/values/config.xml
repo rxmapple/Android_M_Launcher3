@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default setting of unread function -->
+    <bool name="config_default_unread_enable" translatable="false">true</bool>
+</resources>

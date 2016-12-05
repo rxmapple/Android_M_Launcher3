@@ -1,3 +1,16 @@
 <resources>
-    <string name="module_name">com.sprd.launcher3.ext</string>
+    <!--SPRD Add for unreadNotifier function  start-->
+    <string name="unread_notifier_title">Unread Settings</string>
+    <string name="unread_misscall_hint">"Miss required Phone permission, Please apply permission first."</string>
+    <string name="unread_misssms_hint">"Miss required SMS permissions, Please apply permission first."</string>
+
+    <string name="app_list_preference_none">Please select a app.</string>
+
+    <string name="pref_missed_call_count_title">Missed call counts</string>
+    <string name="pref_missed_call_count_summary">Select a Phone app, display the missed calls number on it</string>
+    <string name="pref_unread_sms_count_title">Unread SMS counts</string>
+    <string name="pref_unread_sms_count_summary">Select a SMS app, display the unread messages number on it</string>
+    <string name="selected_text">Selected</string>
+
+    <!--SPRD Add for unreadNotifier function  end-->
 </resources>
