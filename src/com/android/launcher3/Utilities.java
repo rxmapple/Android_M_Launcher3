@@ -710,4 +710,6 @@ public final class Utilities {
     public static String createDbSelectionQuery(String columnName, Iterable<?> values) {
         return String.format(Locale.ENGLISH, "%s IN (%s)", columnName, TextUtils.join(", ", values));
     }
+
+
 }

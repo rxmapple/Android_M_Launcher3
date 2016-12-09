@@ -159,6 +159,15 @@
             android:process=":settings_process">
         </activity>
 
+        <!--SPRD add for Feature control SPRD_SETTINGS_ACTIVITY_SUPPORT-->
+        <activity
+            android:name="com.sprd.launcher3.ext.SprdSettingsActivity"
+            android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
+            android:label="@string/settings_button_text"
+            android:autoRemoveFromRecents="true"
+            android:process=":sprd_settings_process">
+        </activity>
+
         <!-- Debugging tools -->
         <activity
             android:name="com.android.launcher3.MemoryDumpActivity"
