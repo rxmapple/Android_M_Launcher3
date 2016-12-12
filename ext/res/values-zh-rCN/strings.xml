@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dynamic_icon_title">"动态图标"</string>
+    <string name="dynamic_calendar">"日历"</string>
+    <string name="dynamic_clock">"时钟"</string>
+</resources>

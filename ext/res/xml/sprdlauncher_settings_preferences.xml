@@ -23,5 +23,9 @@
             android:defaultValue="@bool/allow_rotation"
             android:persistent="true"
     />
+    <Preference
+        android:key="pref_dynamicIcon"
+        android:title="@string/dynamic_icon_title"
+        />
 
 </PreferenceScreen>

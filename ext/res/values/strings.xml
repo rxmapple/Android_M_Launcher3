@@ -1,3 +1,7 @@
 <resources>
     <string name="module_name">com.sprd.launcher3.ext</string>
+
+    <string name="dynamic_icon_title">Dynamic Icon</string>
+    <string name="dynamic_calendar">Calendar</string>
+    <string name="dynamic_clock">Clock</string>
 </resources>

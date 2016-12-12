@@ -20,6 +20,7 @@ import com.android.launcher3.Workspace;
 import com.android.launcher3.allapps.AllAppsContainerView;
 import com.sprd.launcher3.dynamicIcon.DynamicCalendar;
 import com.sprd.launcher3.dynamicIcon.DynamicDeskclock;
+import com.sprd.launcher3.dynamicIcon.DynamicIcon;
 import com.sprd.launcher3.dynamicIcon.DynamicIcon.DynamicIconDrawCallback;
 
 import java.lang.ref.WeakReference;
@@ -34,8 +35,10 @@ public class DynamicIconUtils {
 
     public static final float STABLE_SCALE = 1.0f;
 
+    public static int DYNAMIC_CLOCK_TYPE = 1001;
+    public static int DYNAMIC_CALENDAR_TYPE = 1002;
     private static DynamicIconUtils INSTANCE;
-    private static ArrayList<DynamicSupportInfo> DYNAMIC_SUPPORT_INFOS =
+    private static ArrayList<DynamicIcon> DYNAMIC_INFOS =
             new ArrayList<>();
     private static final int INVALID_NUM = -1;
     private static int sDynamicIconInfoNum = 0;
@@ -45,26 +48,6 @@ public class DynamicIconUtils {
     private AllAppsContainerView mAppsView;
     private WeakReference<DynamicAppChangedCallbacks> mCallbacks;
     private Context mContext;
-
-    class DynamicSupportInfo {
-
-        ComponentName component;
-        Drawable background;
-        DynamicIconDrawCallback callback;
-
-        public DynamicSupportInfo(ComponentName componentName, Drawable background,
-                                  DynamicIconDrawCallback callback) {
-            component = componentName;
-            this.background = background;
-            this.callback = callback;
-        }
-
-        @Override
-        public String toString() {
-            return "{DynamicSupportInfo[" + component + "], background = " + background
-                    + ", callback = " + callback + "}";
-        }
-    }
 
     public DynamicIconUtils(Context context) {
         mContext = context;
@@ -91,6 +74,9 @@ public class DynamicIconUtils {
                         + ", mCallbacks = " + mCallbacks);
             }
         }
+
+        //step2: load dynamic icon information.
+        loadAndInitDynamicIcon();
     }
 
     /**
@@ -109,14 +95,24 @@ public class DynamicIconUtils {
         return getDynamicIconCallbackAt(index);
     }
 
+    public DynamicIcon getDynamicIconByType(int type) {
+        for (int i = 0; i < DYNAMIC_INFOS.size(); i ++) {
+            DynamicIcon icon = DYNAMIC_INFOS.get(i);
+            if (icon.getType() == type) {
+                return icon;
+            }
+        }
+        return null;
+    }
+
     private static int supportDynamicIcon(ComponentName componentName) {
         if (componentName == null) {
             return INVALID_NUM;
         }
 
-        final int size = DYNAMIC_SUPPORT_INFOS.size();
+        final int size = DYNAMIC_INFOS.size();
         for(int i = 0; i < size; i++) {
-            if (DYNAMIC_SUPPORT_INFOS.get(i).component.equals(componentName)) {
+            if (DYNAMIC_INFOS.get(i).getComponentName().equals(componentName)) {
                 return i;
             }
         }
@@ -136,7 +132,7 @@ public class DynamicIconUtils {
             LogUtils.d(TAG, "getDynamicIconCallbackAt: index = " + index);
         }
 
-        return DYNAMIC_SUPPORT_INFOS.get(index).callback;
+        return DYNAMIC_INFOS.get(index).getDynamicIconDrawCallback();
     }
 
     private static Drawable getStableBGAt(int index) {
@@ -148,13 +144,13 @@ public class DynamicIconUtils {
             LogUtils.d(TAG, "getStableBGAt: index = " + index);
         }
 
-        return DYNAMIC_SUPPORT_INFOS.get(index).background;
+        return DYNAMIC_INFOS.get(index).getStableBackground();
     }
 
     /**
      * Load and initialize dynamic icon.
      */
-    public void loadAndInitDynamicIcon() {
+    private void loadAndInitDynamicIcon() {
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... unused) {
@@ -175,29 +171,27 @@ public class DynamicIconUtils {
     }
 
     private void loadDynamicIconInfo() {
+        DYNAMIC_INFOS.clear();
+
         if (FeatureOption.SPRD_DYNAMIC_CALENDAR_SUPPORT) {
-            DynamicCalendar calendar = new DynamicCalendar(mContext);
-            DynamicSupportInfo dynamicCalendar =
-                    new DynamicSupportInfo(calendar.getComponentName(),
-                            calendar.getStableBackground(), calendar.getDynamicIconDrawCallback());
-            calendar.setDynamicIconDrawCallback(mCallbacks);
-            DYNAMIC_SUPPORT_INFOS.add(dynamicCalendar);
+            DynamicCalendar dynamicCal = new DynamicCalendar(mContext, DYNAMIC_CALENDAR_TYPE);
+            dynamicCal.setDynamicIconDrawCallback(mCallbacks);
+            DYNAMIC_INFOS.add(dynamicCal);
         }
 
         if (FeatureOption.SPRD_DYNAMIC_CLOCK_SUPPORT) {
-            DynamicDeskclock deskclock = new DynamicDeskclock(mContext);
-            DynamicSupportInfo dynamicClock =
-                    new DynamicSupportInfo(deskclock.getComponentName(),
-                            deskclock.getStableBackground(), deskclock.getDynamicIconDrawCallback());
-            deskclock.setDynamicIconDrawCallback(mCallbacks);
-            DYNAMIC_SUPPORT_INFOS.add(dynamicClock);
+            DynamicDeskclock dynamicClock = new DynamicDeskclock(mContext, DYNAMIC_CLOCK_TYPE);
+            dynamicClock.setDynamicIconDrawCallback(mCallbacks);
+            if (dynamicClock.mIsChecked) {
+                dynamicClock.startAutoUpdateView();
+            }
+            DYNAMIC_INFOS.add(dynamicClock);
         }
-
-        sDynamicIconInfoNum = DYNAMIC_SUPPORT_INFOS.size();
+        sDynamicIconInfoNum = DYNAMIC_INFOS.size();
 
         if (LogUtils.DEBUG_DYNAMIC_ICON) {
             LogUtils.d(TAG, "loadDynamicIconInfo: sDynamicIconInfoNum = " + sDynamicIconInfoNum
-                + ", DYNAMIC_SUPPORT_INFOS = " + DYNAMIC_SUPPORT_INFOS.toString());
+                + ", DYNAMIC_INFOS = " + DYNAMIC_INFOS.toString());
         }
     }
 

@@ -16,6 +16,7 @@ import android.view.View;
 
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.R;
+import com.sprd.launcher3.ext.UtilitiesExt;
 
 import java.util.Calendar;
 
@@ -46,18 +47,31 @@ public class DynamicDeskclock extends DynamicIcon {
     private int mLastHour;
     private int mLastMinute;
     private int mLastSecond;
+    private int[] mDefaultTime;
 
     private Handler mSecondsHandler;
+    private Drawable mClockBackground;
 
+    HandlerThread mSecondThread;
     private DynamicIconDrawCallback mClockCallback = new DynamicIconDrawCallback() {
         @Override
         public void drawDynamicIcon(Canvas canvas, View icon, float scale, int[] center) {
-            draw(canvas, icon, scale, center);
+                draw(canvas, icon, scale, center);
         }
     };
 
-    public DynamicDeskclock(Context context) {
-        super(context);
+    public DynamicDeskclock(Context context, int type) {
+        super(context, type);
+
+        mClockBackground = ContextCompat.getDrawable(mContext, R.drawable.ic_dial_plate);
+        mComponent = ComponentName.unflattenFromString(
+                mContext.getResources().getString(R.string.default_dynamic_clock));
+        if (!isAppInstalled(mComponent)) {
+            mComponent = sDeskClockComponentName;
+        }
+        mIsChecked = isAppInstalled() && UtilitiesExt.getLauncherSettingsBoolean(mContext,
+                DynamicIconSettingsFragment.PRE_DYNAMIC_CLOCK,
+                mContext.getResources().getBoolean(R.bool.config_show_dynamic_clock));
     }
 
     @Override
@@ -78,17 +92,7 @@ public class DynamicDeskclock extends DynamicIcon {
         mHourPaint.setColor(res.getColor(R.color.dynamic_clock_hour_hand));
         mHourWidth = res.getDimensionPixelOffset(R.dimen.dynamic_clock_hour_width);
 
-        HandlerThread secondThread =  new HandlerThread("sec-thread");
-        secondThread.start();
-        mSecondsHandler = new Handler(secondThread.getLooper());
-        Long nextSecond = SystemClock.uptimeMillis() / 1000 * 1000 + 1000;
-        mSecondsHandler.postAtTime(new Runnable() {
-            @Override
-            public void run() {
-                forceUpdateView();
-                mSecondsHandler.postAtTime(this, SystemClock.uptimeMillis() / 1000 * 1000 + 1000);
-            }
-        }, nextSecond);
+        mDefaultTime = res.getIntArray(R.array.config_defaultClockTime);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_TIME_TICK);
@@ -117,19 +121,36 @@ public class DynamicDeskclock extends DynamicIcon {
     }
 
     public ComponentName getComponentName() {
-        mComponent = sDeskClockComponentName;
-        return sDeskClockComponentName;
+        return mComponent;
     }
 
     public Drawable getStableBackground() {
-        Drawable clockBackground = ContextCompat.getDrawable(mContext, R.drawable.ic_dial_plate);
-        return clockBackground;
+        return mClockBackground;
     }
 
     public DynamicIconDrawCallback getDynamicIconDrawCallback() {
         return mClockCallback;
     }
 
+    public void startAutoUpdateView() {
+        if (mSecondThread == null) {
+            mSecondThread = new HandlerThread("sec-thread");
+            mSecondThread.start();
+            if (mSecondsHandler == null) {
+                mSecondsHandler = new Handler(mSecondThread.getLooper());
+            }
+        }
+        Long nextSecond = SystemClock.uptimeMillis() / 1000 * 1000 + 1000;
+        mSecondsHandler.postAtTime(new Runnable() {
+            @Override
+            public void run() {
+                forceUpdateView(true);
+                if (mIsChecked) {
+                    mSecondsHandler.postAtTime(this, SystemClock.uptimeMillis() / 1000 * 1000 + 1000);
+                }
+            }
+        }, nextSecond);
+    }
     private void draw(Canvas canvas, View icon, float scale, int[] center) {
         if (canvas == null || center == null || !(icon instanceof BubbleTextView)) {
             return;
@@ -146,15 +167,12 @@ public class DynamicDeskclock extends DynamicIcon {
         mHourPaint.setStrokeWidth(mHourWidth * scale);
 
         Calendar c = Calendar.getInstance();
-        int hour = c.get(Calendar.HOUR_OF_DAY);
-        int minute = c.get(Calendar.MINUTE);
-        int second = c.get(Calendar.SECOND);
+        int hour = mIsChecked ? c.get(Calendar.HOUR_OF_DAY) % 12 : mDefaultTime[0];
+        int minute = mIsChecked ? c.get(Calendar.MINUTE) : mDefaultTime[1];
+        int second = mIsChecked ? c.get(Calendar.SECOND) : mDefaultTime[2];
 
         mLastSecond = second;
         mLastMinute = minute;
-        if(hour >=12) {
-            hour -= 12;
-        }
         mLastHour = hour;
 
         float Seconds = second;

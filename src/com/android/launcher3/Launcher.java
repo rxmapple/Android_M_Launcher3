@@ -504,7 +504,6 @@ public class Launcher extends Activity
 
             // initialize dynamic icon
             mDynamicIconUtils.initialize(this);
-            mDynamicIconUtils.loadAndInitDynamicIcon();
 
         }
 
@@ -4902,7 +4901,7 @@ public class Launcher extends Activity
      * @param component the component name of the app.
      */
     public void bindComponentDynamicIconChanged(final ComponentName component) {
-        if (LogUtils.DEBUG_DYNAMIC_ICON) {
+        if (true || LogUtils.DEBUG_DYNAMIC_ICON) {
             LogUtils.d(TAG, "bindComponentDynamicIconChanged: component = " + component
                     + ", this = " + this);
         }

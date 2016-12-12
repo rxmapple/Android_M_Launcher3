@@ -18,6 +18,7 @@
 package com.sprd.launcher3.ext;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -28,6 +29,7 @@ import android.preference.SwitchPreference;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
+import com.sprd.launcher3.dynamicIcon.DynamicIconSettings;
 
 /**
  * Created by SPREADTRUM\pichao.gao on 11/8/16.
@@ -35,10 +37,10 @@ import com.android.launcher3.Utilities;
  * SPRD Settings activity for Launcher. Currently implements the following setting: Allow rotation
  */
 public class SprdSettingsActivity extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         // Display the fragment as the main content.
         getFragmentManager().beginTransaction()
                 .replace(android.R.id.content, new SprdLauncherSettingsFragment())
@@ -49,7 +51,10 @@ public class SprdSettingsActivity extends Activity {
      * This fragment shows the launcher preferences.
      */
     public static class SprdLauncherSettingsFragment extends PreferenceFragment
-            implements OnPreferenceChangeListener {
+            implements OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
+
+        private static final String PRE_KEY_DYNAMICICON = "pref_dynamicIcon";
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -67,6 +72,13 @@ public class SprdSettingsActivity extends Activity {
             pref.setOnPreferenceChangeListener(this);
 
 
+            Preference dynamicIconPref = findPreference(PRE_KEY_DYNAMICICON);
+            boolean show = getActivity().getResources().getBoolean(R.bool.config_show_dynamic_icon_settings);
+            if (show && FeatureOption.SPRD_DYNAMIC_ICON_SUPPORT) {
+                dynamicIconPref.setOnPreferenceClickListener(this);
+            } else {
+                getPreferenceScreen().removePreference(dynamicIconPref);
+            }
         }
 
         @Override
@@ -88,6 +100,15 @@ public class SprdSettingsActivity extends Activity {
                         preference.getKey(), extras);
             }
             return true;
+        }
+        @Override
+        public boolean onPreferenceClick(Preference preference) {
+            String key = preference.getKey();
+            if (PRE_KEY_DYNAMICICON.equals(key)) {
+                Intent dynamicIconIntent = new Intent(getActivity(), DynamicIconSettings.class);
+                startActivity(dynamicIconIntent);
+            }
+            return false;
         }
     }
 }

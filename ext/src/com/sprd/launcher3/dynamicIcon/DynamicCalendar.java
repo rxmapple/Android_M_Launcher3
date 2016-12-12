@@ -4,7 +4,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -14,10 +13,12 @@ import android.view.View;
 
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.R;
+import com.sprd.launcher3.ext.UtilitiesExt;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
  * Created by SPRD on 10/21/16.
@@ -34,6 +35,7 @@ public class DynamicCalendar extends DynamicIcon {
     private static final float WEEK_SIZE_FACTOR = 0.18f;
 
     private String mLastDate = "";
+    private int[] mDefaultDate;
     private Paint mDatePaint;
     private Paint mWeekPaint;
     private Drawable mCalendarBackground;
@@ -41,18 +43,26 @@ public class DynamicCalendar extends DynamicIcon {
     private DynamicIconDrawCallback mCalendarCallback = new DynamicIconDrawCallback() {
         @Override
         public void drawDynamicIcon(Canvas canvas, View icon, float scale, int[] center) {
-            draw(canvas, icon, scale, center);
+                draw(canvas, icon, scale, center);
         }
     };
 
-    public DynamicCalendar(Context context) {
-        super(context);
+    public DynamicCalendar(Context context, int type) {
+        super(context, type);
+
         mCalendarBackground = ContextCompat.getDrawable(mContext, R.drawable.ic_calendar_plate);
+        mComponent = ComponentName.unflattenFromString(
+                mContext.getResources().getString(R.string.default_dynamic_calendar));
+        if (!isAppInstalled(mComponent)) {
+            mComponent = sCalendarComponentName;
+        }
+        mIsChecked = isAppInstalled() && UtilitiesExt.getLauncherSettingsBoolean(mContext,
+                DynamicIconSettingsFragment.PRE_DYNAMIC_CALENDAR,
+                mContext.getResources().getBoolean(R.bool.config_show_dynamic_calendar));
     }
 
     @Override
     protected void init() {
-        Resources res = mContext.getResources();
         Typeface font = Typeface.create("sans-serif-thin", Typeface.NORMAL);
 
         mDatePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -63,6 +73,8 @@ public class DynamicCalendar extends DynamicIcon {
         mWeekPaint.setTextAlign(Paint.Align.CENTER);
         mWeekPaint.setTypeface(font);
         mWeekPaint.setColor(0Xffff0000);
+
+        mDefaultDate = mContext.getResources().getIntArray(R.array.config_defaultCalendarDate);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_DATE_CHANGED);
@@ -81,8 +93,7 @@ public class DynamicCalendar extends DynamicIcon {
     }
 
     public ComponentName getComponentName() {
-        mComponent = sCalendarComponentName;
-        return sCalendarComponentName;
+        return mComponent;
     }
 
     public Drawable getStableBackground() {
@@ -98,8 +109,19 @@ public class DynamicCalendar extends DynamicIcon {
             return;
         }
 
-        String day = getTodayDate();
-        String dayOfWeek = getTodayWeek();
+        String day;
+        String dayOfWeek;
+        if (mIsChecked) {
+            day = getTodayDate();
+            dayOfWeek = getTodayWeek();
+        } else  {
+            GregorianCalendar date = new GregorianCalendar(mDefaultDate[0], mDefaultDate[1], mDefaultDate[2]);
+            SimpleDateFormat format = new SimpleDateFormat("EEEE");
+            String weekday = format.format(date.getTime());
+
+            day = Integer.toString(mDefaultDate[2]);
+            dayOfWeek = weekday;
+        }
 
         int iconSize = ((BubbleTextView) icon).getIconSize();
         float dateSize = iconSize * DATE_SIZE_FACTOR;
@@ -124,8 +146,8 @@ public class DynamicCalendar extends DynamicIcon {
     }
 
     private String getTodayWeek() {
-        long time=System.currentTimeMillis();
-        Date date=new Date(time);
+        long time = System.currentTimeMillis();
+        Date date = new Date(time);
         SimpleDateFormat format = new SimpleDateFormat("EEEE");
         String weekday = format.format(date);
         return weekday;

@@ -168,6 +168,18 @@
             android:process=":sprd_settings_process">
         </activity>
 
+        <!--SPRD add for dynamic icon feature -->
+        <activity
+            android:name="com.sprd.launcher3.dynamicIcon.DynamicIconSettings"
+            android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
+            android:label="@string/dynamic_icon_title"
+            android:autoRemoveFromRecents="true">
+            <intent-filter>
+                <action android:name="com.sprd.ACTION_DYNAMIC_ICON_SETTINGS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <!-- Debugging tools -->
         <activity
             android:name="com.android.launcher3.MemoryDumpActivity"

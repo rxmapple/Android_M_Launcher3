@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_dynamic_calendar" translatable="false">com.google.android.calendar/com.android.calendar.AllInOneActivity</string>
+    <bool name="config_show_dynamic_calendar">true</bool>
+
+    <string name="default_dynamic_clock" translatable="false">com.google.android.deskclock/com.android.deskclock.DeskClock</string>
+    <bool name="config_show_dynamic_clock">true</bool>
+
+    <integer-array translatable="false" name="config_defaultClockTime">
+        <item>10</item> <!-- Default Hour -->
+        <item>10</item> <!-- Default Minute -->
+        <item>30</item> <!-- Default Second -->
+    </integer-array>
+
+    <integer-array translatable="false" name="config_defaultCalendarDate">
+        <item>2016</item> <!-- Default Year -->
+        <item>10</item> <!-- Default Month -->
+        <item>30</item> <!-- Default Day -->
+    </integer-array>
+
+    <bool name="config_show_dynamic_icon_settings">true</bool>
+</resources>
