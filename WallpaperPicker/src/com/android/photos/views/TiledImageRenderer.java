@@ -33,6 +33,7 @@ import com.android.gallery3d.glrenderer.BasicTexture;
 import com.android.gallery3d.glrenderer.GLCanvas;
 import com.android.gallery3d.glrenderer.UploadedTexture;
 import com.android.launcher3.util.Thunk;
+import com.sprd.launcher3.ext.FeatureOption;
 
 /**
  * Handles laying out, decoding, and drawing of tiles in GL
@@ -234,6 +235,13 @@ public class TiledImageRenderer {
     }
 
     public void setViewSize(int width, int height) {
+        //SPRD add for SPRD_SET_SINGLE_WALLPAPER begin
+       if(FeatureOption.SPRD_SET_SINGLE_WALLPAPER){
+           if (mViewWidth != width || mViewHeight != height) {
+               mLayoutTiles = true;
+           }
+        }
+       //SPRD add for SPRD_SET_SINGLE_WALLPAPER end
         mViewWidth = width;
         mViewHeight = height;
     }

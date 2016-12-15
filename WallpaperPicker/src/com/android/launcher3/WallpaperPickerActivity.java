@@ -79,6 +79,7 @@ import com.android.launcher3.util.WallpaperUtils;
 import com.android.photos.BitmapRegionTileSource;
 import com.android.photos.BitmapRegionTileSource.BitmapSource;
 import com.android.photos.views.TiledImageRenderer.TileSource;
+import com.sprd.launcher3.ext.FeatureOption;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -179,7 +180,13 @@ public class WallpaperPickerActivity extends WallpaperCropActivity {
                     a.getSavedImages().writeImage(thumb, imageBytes);
                 }
             };
-            a.cropImageAndSetWallpaper(mUri, h, finishActivityWhenDone);
+            //SPRD modify for SPRD_SET_SINGLE_WALLPAPER begin
+            if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+                a.cropScreenAndSetWallpaper(mUri, null, 0, h, finishActivityWhenDone);
+            }else{
+                a.cropImageAndSetWallpaper(mUri, h, finishActivityWhenDone);
+            }
+            //SPRD modify for SPRD_SET_SINGLE_WALLPAPER end
         }
         @Override
         public boolean isSelectable() {
@@ -215,7 +222,13 @@ public class WallpaperPickerActivity extends WallpaperCropActivity {
         }
         @Override
         public void onSave(WallpaperPickerActivity a) {
-            a.setWallpaper(Uri.fromFile(mFile), true);
+            //SPRD modify for SPRD_SET_SINGLE_WALLPAPER begin
+            if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+                a.cropScreenAndSetWallpaper(Uri.fromFile(mFile), null, 0, null, true);
+            }else{
+                a.setWallpaper(Uri.fromFile(mFile), true);
+            }
+            //SPRD modify for SPRD_SET_SINGLE_WALLPAPER end
         }
         @Override
         public boolean isSelectable() {
@@ -242,7 +255,6 @@ public class WallpaperPickerActivity extends WallpaperCropActivity {
             final BitmapRegionTileSource.ResourceBitmapSource bitmapSource =
                     new BitmapRegionTileSource.ResourceBitmapSource(mResources, mResId);
             a.setCropViewTileSource(bitmapSource, false, false, new CropViewScaleProvider() {
-
                 @Override
                 public float getScale(TileSource src) {
                     Point wallpaperSize = WallpaperUtils.getDefaultWallpaperSize(
@@ -265,7 +277,13 @@ public class WallpaperPickerActivity extends WallpaperCropActivity {
         @Override
         public void onSave(WallpaperPickerActivity a) {
             boolean finishActivityWhenDone = true;
-            a.cropImageAndSetWallpaper(mResources, mResId, finishActivityWhenDone);
+            //SPRD modify for SPRD_SET_SINGLE_WALLPAPER begin
+            if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+                a.cropScreenAndSetWallpaper(null, mResources, mResId, null, finishActivityWhenDone);
+            }else{
+                a.cropImageAndSetWallpaper(mResources, mResId, finishActivityWhenDone);
+            }
+            //SPRD modify for SPRD_SET_SINGLE_WALLPAPER end
         }
         @Override
         public boolean isSelectable() {
@@ -348,6 +366,11 @@ public class WallpaperPickerActivity extends WallpaperCropActivity {
                     changeWallpaperFlags(visible);
                 } else {
                     mCropView.setVisibility(View.INVISIBLE);
+                    //SPRD add for SPRD_SET_SINGLE_WALLPAPER begin
+                    if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+                        mSingleWallPaperEnabler.setVisibility(View.GONE);
+                    }
+                    //SPRD add for SPRD_SET_SINGLE_WALLPAPER end
                 }
             }
         }, FLAG_POST_DELAY_MILLIS);
@@ -415,6 +438,11 @@ public class WallpaperPickerActivity extends WallpaperCropActivity {
                         mAnim.cancel();
                     }
                     mWallpaperStrip.setVisibility(View.VISIBLE);
+                    //SPRD add for SPRD_SET_SINGLE_WALLPAPER begin
+                    if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+                        mWallpaperStrip.bringToFront();
+                    }
+                    //SPRD add for SPRD_SET_SINGLE_WALLPAPER end
                     mAnim = mWallpaperStrip.animate();
                     mAnim.alpha(1f)
                          .setDuration(150)
@@ -545,7 +573,13 @@ public class WallpaperPickerActivity extends WallpaperCropActivity {
         // Action bar
         // Show the custom action bar view
         final ActionBar actionBar = getActionBar();
-        actionBar.setCustomView(R.layout.actionbar_set_wallpaper);
+        //SPRD modify for SPRD_SET_SINGLE_WALLPAPER begin
+        if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+            mSingleWallPaperEnabler.createSwitchButton(actionBar, mCropView);
+        }else{
+            actionBar.setCustomView(R.layout.actionbar_set_wallpaper);
+        }
+        //SPRD modify for SPRD_SET_SINGLE_WALLPAPER end
         actionBar.getCustomView().setOnClickListener(
                 new View.OnClickListener() {
                     @Override
@@ -659,6 +693,11 @@ public class WallpaperPickerActivity extends WallpaperCropActivity {
 
     public void setWallpaperButtonEnabled(boolean enabled) {
         mSetWallpaperButton.setEnabled(enabled);
+        //SPRD add for SPRD_SET_SINGLE_WALLPAPER begin
+        if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+            mSingleWallPaperEnabler.setEnabled(enabled);
+        }
+        //SPRD add for SPRD_SET_SINGLE_WALLPAPER end
     }
 
     @Thunk void selectTile(View v) {
@@ -977,14 +1016,23 @@ public class WallpaperPickerActivity extends WallpaperCropActivity {
 
         if (partner == null || !partner.hideDefaultWallpaper()) {
             // Add an entry for the default wallpaper (stored in system resources)
+            //SPRD modify for SPRD_SET_SINGLE_WALLPAPER begin
             WallpaperTileInfo defaultWallpaperInfo = Utilities.ATLEAST_KITKAT
-                    ? getDefaultWallpaper() : getPreKKDefaultWallpaperInfo();
+                    ? (FeatureOption.SPRD_SET_SINGLE_WALLPAPER ? mSingleWallPaperEnabler.getDefaultFileWallpaper(this)
+                            : getDefaultWallpaper()) : getPreKKDefaultWallpaperInfo();
+            //SPRD modify for SPRD_SET_SINGLE_WALLPAPER end
             if (defaultWallpaperInfo != null) {
                 bundled.add(0, defaultWallpaperInfo);
             }
         }
         return bundled;
     }
+
+    //SPRD add for SPRD_SET_SINGLE_WALLPAPER begin
+    public boolean writeDefaultImageToFileAsJpeg(File f, Bitmap b){
+        return writeImageToFileAsJpeg(f,b);
+    }
+    //SPRD add for SPRD_SET_SINGLE_WALLPAPER end
 
     private boolean writeImageToFileAsJpeg(File f, Bitmap b) {
         try {

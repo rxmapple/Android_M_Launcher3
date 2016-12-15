@@ -50,7 +50,8 @@ import com.android.photos.BitmapRegionTileSource;
 import com.android.photos.BitmapRegionTileSource.BitmapSource;
 import com.android.photos.BitmapRegionTileSource.BitmapSource.InBitmapProvider;
 import com.android.photos.views.TiledImageRenderer.TileSource;
-
+import com.sprd.launcher3.ext.FeatureOption;
+import com.sprd.launcher3.ext.singlewallpaper.SingleWallPaperEnabler;
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -75,6 +76,9 @@ public class WallpaperCropActivity extends BaseActivity implements Handler.Callb
 
     protected CropView mCropView;
     protected View mProgressView;
+    //SPRD add for SPRD_SET_SINGLE_WALLPAPER begin
+    protected SingleWallPaperEnabler mSingleWallPaperEnabler;
+    //SPRD add for SPRD_SET_SINGLE_WALLPAPER end
     protected Uri mUri;
     protected View mSetWallpaperButton;
 
@@ -93,7 +97,11 @@ public class WallpaperCropActivity extends BaseActivity implements Handler.Callb
         mLoaderThread = new HandlerThread("wallpaper_loader");
         mLoaderThread.start();
         mLoaderHandler = new Handler(mLoaderThread.getLooper(), this);
-
+        //SPRD add for SPRD_SET_SINGLE_WALLPAPER begin
+        if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+            mSingleWallPaperEnabler = new SingleWallPaperEnabler(this);
+        }
+        //SPRD add for SPRD_SET_SINGLE_WALLPAPER end
         init();
         if (!enableRotation()) {
             setRequestedOrientation(Configuration.ORIENTATION_PORTRAIT);
@@ -118,13 +126,26 @@ public class WallpaperCropActivity extends BaseActivity implements Handler.Callb
         // Action bar
         // Show the custom action bar view
         final ActionBar actionBar = getActionBar();
-        actionBar.setCustomView(R.layout.actionbar_set_wallpaper);
+        //SPRD modify for SPRD_SET_SINGLE_WALLPAPER begin
+        if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+           mSingleWallPaperEnabler.createSwitchButton(actionBar, mCropView);
+        }else{
+            actionBar.setCustomView(R.layout.actionbar_set_wallpaper);
+        }
+        //SPRD modify for SPRD_SET_SINGLE_WALLPAPER end
+
         actionBar.getCustomView().setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         boolean finishActivityWhenDone = true;
-                        cropImageAndSetWallpaper(imageUri, null, finishActivityWhenDone);
+                        //SPRD modify for SPRD_SET_SINGLE_WALLPAPER begin
+                        if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER) {
+                            cropScreenAndSetWallpaper(imageUri, null, 0, null, finishActivityWhenDone);
+                        }else{
+                            cropImageAndSetWallpaper(imageUri, null, finishActivityWhenDone);
+                        }
+                        //SPRD modify for SPRD_SET_SINGLE_WALLPAPER end
                     }
                 });
         mSetWallpaperButton = findViewById(R.id.set_wallpaper_button);
@@ -237,7 +258,46 @@ public class WallpaperCropActivity extends BaseActivity implements Handler.Callb
         }
     }
 
+    //SPRD add for SPRD_SET_SINGLE_WALLPAPER begin
+    public void onLayoutChangeComplete(Object req, boolean success){
+        if(req instanceof LoadRequest) {
+            onLoadRequestComplete((LoadRequest)req, success);
+        }
+    }
+
+    public void updateSingleWallpaperDimensions(int w, int h){
+        updateWallpaperDimensions(w,h);
+    }
+
+    public void setWallpaperButtonEnabled(boolean enabled) {
+        mSetWallpaperButton.setEnabled(enabled);
+        mSingleWallPaperEnabler.setEnabled(enabled);
+    }
+
+    public void cropScreenAndSetWallpaper(Uri uri, Resources res, int resId,
+            BitmapCropTask.OnBitmapCroppedHandler onBitmapCroppedHandler,
+            final boolean finishActivityWhenDone){
+        mSingleWallPaperEnabler.cropImageAndSetWallpaper(uri, res, resId,
+                onBitmapCroppedHandler, finishActivityWhenDone);
+    }
+
+    private boolean checkLayoutChange(LoadRequest req) {
+        boolean isLayoutChange = mSingleWallPaperEnabler.checkLayoutChange(req,req.touchEnabled);
+        req.scaleProvider = null;
+        req.touchEnabled = true;
+        return isLayoutChange;
+    }
+    //SPRD modify for SPRD_SET_SINGLE_WALLPAPER end
+
     protected void onLoadRequestComplete(LoadRequest req, boolean success) {
+        //SPRD add for SPRD_SET_SINGLE_WALLPAPER begin
+        if (FeatureOption.SPRD_SET_SINGLE_WALLPAPER && success &&
+                mSingleWallPaperEnabler.needCheckLayoutChange(req)) {
+            if(checkLayoutChange(req)) {
+                return;
+            }
+        }
+        //SPRD add for SPRD_SET_SINGLE_WALLPAPER end
         mCurrentLoadRequest = null;
         if (success) {
             TileSource oldSrc = mCropView.getTileSource();

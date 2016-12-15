@@ -1,3 +1,5 @@
 <resources>
     <string name="module_name">com.sprd.launcher3.ext</string>
+    <string name="single_wallpaper">Single</string>
+    <string name="scroll_wallpaper">Scroll</string>
 </resources>

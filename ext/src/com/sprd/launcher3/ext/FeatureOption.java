@@ -14,6 +14,8 @@ public class FeatureOption {
     //end }
     public static final boolean SPRD_UNREAD_INFO_SUPPORT = getProp("ro.sprd_unread_info", true);
 
+    public static final boolean SPRD_SET_SINGLE_WALLPAPER = getProp("ro.sprd_single_wallpaper", true);
+
     private static boolean getProp(String prop, boolean devalues) {
         boolean ret = false;
 
